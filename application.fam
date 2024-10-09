@@ -1,0 +1,16 @@
+# For details & more options, see documentation/AppManifests.md in firmware repo
+
+App(
+    appid="postmanflipx",  # Must be unique
+    name="[esp32] Flipper Postman",  # Displayed in menus
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="app",
+    stack_size=2 * 1024,
+    fap_category="GPIO",
+    fap_version=(0, 1),
+    fap_icon="flipper-postman.png",  # 10x10 1-bit PNG
+    fap_description="Flipper Postman can be used to send HTTP requests from a flipper device using the the esp32s2 postman firmware.",
+    fap_author="MassivDash (hhtps://spaceout.pl)",
+    fap_weburl="https://github.com/MassivDash/flipper-postman",
+    fap_icon_assets="images",  # Image assets to compile for this application
+)
