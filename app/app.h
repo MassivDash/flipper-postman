@@ -1,3 +1,7 @@
+#ifndef APP_H
+#define APP_H
+
+#include "uart/uart.h"
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/menu.h>
 #include <gui/modules/number_input.h>
@@ -9,11 +13,6 @@
 #include <gui/view_dispatcher.h>
 #include <storage/storage.h>
 
-#include "structs.h"
-
-// app/app.h
-#ifndef APP_H
-#define APP_H
 #define KEY_NAME_SIZE 22
 #define TEXT_STORE_SIZE 40
 
@@ -29,6 +28,7 @@ typedef struct {
   TextInput *text_input;
   VariableItemList *variable_item_list;
   char text_store[TEXT_STORE_SIZE + 1];
+  Postman postman; // Add Postman instance
 } App;
 
 #endif // APP_H
