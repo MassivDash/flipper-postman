@@ -6,15 +6,15 @@
 #define STRUCTS_H
 
 typedef enum {
-  SetUpDialog,
+  // SetUpDialog,
   MainMenu,
-  Connect,
-  Get,
-  Post,
-  Build_http,
-  Download,
-  Listen,
-  About,
+  // Connect,
+  // Get,
+  // Post,
+  // Build_http,
+  // Download,
+  // Listen,
+  // About,
   Count
 } AppScene;
 

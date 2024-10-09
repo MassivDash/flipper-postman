@@ -1,10 +1,9 @@
 
 #include "../app.h"
 #include "../structs.h"
+#include "./main_menu/main_menu.h"
 #include <gui/modules/dialog_ex.h>
 #include <gui/view.h>
-
-#include "./main_menu/main_menu.h"
 #define TAG "postman_app"
 
 /** collection of all scene on_enter handlers - in the same order as their enum

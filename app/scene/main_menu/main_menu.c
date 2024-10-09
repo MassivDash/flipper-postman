@@ -43,11 +43,11 @@ bool scene_on_event_main_menu(void *context, SceneManagerEvent event) {
   case SceneManagerEventTypeCustom:
     switch (event.event) {
     case AppEvent_Connect:
-      scene_manager_next_scene(app->scene_manager, Connect);
+      scene_manager_next_scene(app->scene_manager, MainMenu);
       consumed = true;
       break;
     case AppEvent_Get:
-      scene_manager_next_scene(app->scene_manager, Get);
+      scene_manager_next_scene(app->scene_manager, MainMenu);
       consumed = true;
       break;
     }

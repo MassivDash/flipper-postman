@@ -1,12 +1,12 @@
-#ifndef UART_UTILS_H
-#define UART_UTILS_H
+#ifndef UART_H
+#define UART_H
 
 #include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_gpio.h>
 #include <furi_hal_serial.h>
-#include <storage/storage.h>
 
+// Macros and constants
 #define HTTP_TAG "Postman"
 #define http_tag "postman_app"
 #define UART_CH (FuriHalSerialIdUsart)
@@ -14,16 +14,28 @@
 #define BAUDRATE (115200)
 #define RX_BUF_SIZE 1024
 
+// Define GPIO pins for UART
+extern GpioPin test_pins[2];
+
+// Event Flags for UART Worker Thread
 typedef enum {
-  INACTIVE,  // Inactive state
-  IDLE,      // Default state
-  RECEIVING, // Receiving data
-  SENDING,   // Sending data
-  ISSUE,     // Issue with connection
+  WorkerEvtStop = (1 << 0),
+  WorkerEvtRxDone = (1 << 1),
+} WorkerEvtFlags;
+
+// Serial states
+typedef enum {
+  INACTIVE,
+  IDLE,
+  RECEIVING,
+  SENDING,
+  ISSUE,
 } SerialState;
 
+// Callback function type
 typedef void (*Postman_Callback)(const char *line, void *context);
 
+// Postman struct
 typedef struct {
   FuriStreamBuffer *postman_stream;
   FuriHalSerialHandle *serial_handle;
@@ -40,8 +52,11 @@ typedef struct {
   char *received_data;
 } Postman;
 
-bool postman_init(Postman *postman, Postman_Callback callback, void *context);
-void postman_deinit(Postman *postman);
-bool postman_send_command_and_check_response(Postman *postman);
+// Function declarations
+void get_timeout_timer_callback(void *context);
+bool postman_send_data(Postman *postman, const char *data);
 
-#endif // UART_UTILS_H
+bool postman_init(Postman *postman, Postman_Callback callback, void *context);
+void postman_free(Postman *postman);
+
+#endif // UART_H
