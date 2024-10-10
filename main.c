@@ -32,7 +32,7 @@ int32_t app(void *p) {
   Gui *gui = furi_record_open(RECORD_GUI);
   view_dispatcher_attach_to_gui(app->view_dispatcher, gui,
                                 ViewDispatcherTypeFullscreen);
-  scene_manager_next_scene(app->scene_manager, MainMenu);
+  scene_manager_next_scene(app->scene_manager, SetUpDialog);
   FURI_LOG_D(TAG, "Starting dispatcher...");
   view_dispatcher_run(app->view_dispatcher);
 

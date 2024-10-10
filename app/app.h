@@ -1,7 +1,7 @@
 #ifndef APP_H
 #define APP_H
 
-#include "uart/uart.h"
+#include "structs.h"
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/menu.h>
 #include <gui/modules/number_input.h>
@@ -20,15 +20,9 @@ typedef struct {
   SceneManager *scene_manager;
   ViewDispatcher *view_dispatcher;
   Menu *menu;
-  Submenu *submenu;
-  View *view;
-  File *file;
   DialogEx *dialog;
   FuriTimer *timer;
-  TextInput *text_input;
-  VariableItemList *variable_item_list;
-  char text_store[TEXT_STORE_SIZE + 1];
-  Postman postman; // Add Postman instance
+  SetupDialogState dialog_state;
 } App;
 
 #endif // APP_H

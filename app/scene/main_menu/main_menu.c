@@ -13,10 +13,10 @@ void menu_callback_main_menu(void *context, uint32_t index) {
   App *app = context;
   switch (index) {
   case MenuSelection_Connect:
-    scene_manager_handle_custom_event(app->scene_manager, AppEvent_Connect);
+    scene_manager_handle_custom_event(app->scene_manager, AppEvent_SetupDialog);
     break;
   case MenuSelection_Get:
-    scene_manager_handle_custom_event(app->scene_manager, AppEvent_Get);
+    scene_manager_handle_custom_event(app->scene_manager, AppEvent_MainMenu);
     break;
   }
 }
@@ -42,11 +42,11 @@ bool scene_on_event_main_menu(void *context, SceneManagerEvent event) {
   switch (event.type) {
   case SceneManagerEventTypeCustom:
     switch (event.event) {
-    case AppEvent_Connect:
+    case AppEvent_SetupDialog:
       scene_manager_next_scene(app->scene_manager, MainMenu);
       consumed = true;
       break;
-    case AppEvent_Get:
+    case AppEvent_MainMenu:
       scene_manager_next_scene(app->scene_manager, MainMenu);
       consumed = true;
       break;

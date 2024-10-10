@@ -4,20 +4,23 @@
 #include "./main_menu/main_menu.h"
 #include <gui/modules/dialog_ex.h>
 #include <gui/view.h>
-#define TAG "postman_app"
+
+#include "./setup_dialog/setup_dialog.h"
 
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
-void (*const scene_on_enter_handlers[])(void *) = {scene_on_enter_main_menu};
+void (*const scene_on_enter_handlers[])(void *) = {scene_on_enter_setup_dialog,
+                                                   scene_on_enter_main_menu};
 
 /** collection of all scene on event handlers - in the same order as their enum
  */
 bool (*const scene_on_event_handlers[])(void *, SceneManagerEvent) = {
-    scene_on_event_main_menu};
+    scene_on_event_setup_dialog, scene_on_event_main_menu};
 
 /** collection of all scene on exit handlers - in the same order as their enum
  */
-void (*const scene_on_exit_handlers[])(void *) = {scene_on_exit_main_menu};
+void (*const scene_on_exit_handlers[])(void *) = {scene_on_exit_setup_dialog,
+                                                  scene_on_exit_main_menu};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {
@@ -55,12 +58,8 @@ void view_dispatcher_init(App *app) {
   // allocate each view
   FURI_LOG_D(TAG, "view_dispatcher_init allocating views");
   app->menu = menu_alloc();
-  app->submenu = submenu_alloc();
-  app->text_input = text_input_alloc();
-  app->variable_item_list = variable_item_list_alloc();
   app->dialog = dialog_ex_alloc();
-  app->view = view_alloc();
-  app->text_store[0] = '\0';
+
   // Initialize and start the timer to update every second
   // app->timer = furi_timer_alloc(task_continue_timer_callback,
   //                               FuriTimerTypePeriodic, app);
@@ -76,6 +75,10 @@ void view_dispatcher_init(App *app) {
   // MAIN MENU
   // add views to the dispatcher, indexed by their enum value
   FURI_LOG_D(TAG, "view_dispatcher_init adding view menu");
+
+  view_dispatcher_add_view(app->view_dispatcher, AppView_SetupDialog,
+                           dialog_ex_get_view(app->dialog));
+
   view_dispatcher_add_view(app->view_dispatcher, AppView_Menu,
                            menu_get_view(app->menu));
 }
