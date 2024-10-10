@@ -1,11 +1,12 @@
 #include "../../app.h"
 
 #include "../../uart/uart.h"
+#include "../../version.h"
 #include <gui/modules/dialog_ex.h>
 #include <gui/view_dispatcher.h>
 #include <postmanflipx_icons.h>
 
-#define TAG "tracker_app"
+#define TAG "Postman_SetupDialog"
 #define WELCOME_DURATION_MS 3000
 
 static void setup_dialog_callback(DialogExResult result, void *context) {
@@ -79,7 +80,10 @@ void scene_on_enter_setup_dialog(void *context) {
       furi_timer_alloc(setup_dialog_timer_callback, FuriTimerTypeOnce, app);
 
   // Update dialog to show welcome message
-  setup_dialog_update(app, "Welcome to Postman", &I_dolphinWait_59x54, NULL);
+  char welcome_message[64];
+  snprintf(welcome_message, sizeof(welcome_message), "Welcome to Postman v%s",
+           VERSION);
+  setup_dialog_update(app, welcome_message, &I_dolphinWait_59x54, NULL);
 
   // Start the timer for the welcome message
   furi_timer_start(app->timer, WELCOME_DURATION_MS);

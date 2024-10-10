@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "../app.h"
 #include "../structs.h"
+#include "../version.h"
 #include <furi.h>
 #include <furi_hal.h>
 
@@ -123,7 +124,7 @@ Uart *uart_terminal_uart_init(void *context) {
   }
 
   furi_thread_set_name(uart->rx_thread, "UART_TerminalUartRxThread");
-  furi_thread_set_stack_size(uart->rx_thread, 1024);
+  furi_thread_set_stack_size(uart->rx_thread, 512);
   furi_thread_set_context(uart->rx_thread, uart);
   furi_thread_set_callback(uart->rx_thread, uart_worker);
 
@@ -146,6 +147,7 @@ Uart *uart_terminal_uart_init(void *context) {
 
   return uart;
 }
+
 bool uart_terminal_uart_send_version_command(Uart *uart) {
   if (!uart) {
     FURI_LOG_E("UART", "Invalid UART context.");
@@ -166,17 +168,14 @@ bool uart_terminal_uart_send_version_command(Uart *uart) {
       *newline_pos = '\0'; // Terminate the string at the newline character
     }
 
-    // Log the response
-    FURI_LOG_I("UART", "%s", uart->last_response);
-    FURI_LOG_I("UART", "VERSION: 0.1.4");
-
-    // Check if the response contains the expected version string
-    if (strstr(uart->last_response, "VERSION: 0.1.4") != NULL) {
-      FURI_LOG_I("UART", "TRUE");
+    char version_check[50];
+    snprintf(version_check, sizeof(version_check), "VERSION: %s",
+             MIN_BOARD_VERSION);
+    if (strstr(uart->last_response, version_check)) {
       return true;
     }
   }
-  FURI_LOG_I("UART", "FALSE");
+  FURI_LOG_E("UART", "No response received from the board.");
   return false;
 }
 
