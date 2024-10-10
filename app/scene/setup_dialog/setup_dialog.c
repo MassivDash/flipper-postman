@@ -15,39 +15,45 @@ static void setup_dialog_callback(DialogExResult result, void *context) {
 }
 
 static void setup_dialog_update(App *app, const char *message, const Icon *icon,
-                                const char *center_button_text) {
+                                const char *center_button_text, int text_x,
+                                int text_y, Align text_align_h,
+                                Align text_align_v) {
   DialogEx *dialog_ex = app->dialog;
 
-  dialog_ex_set_text(dialog_ex, message, 64, 22, AlignLeft, AlignCenter);
+  // Set the text with specified position and alignment
+  dialog_ex_set_text(dialog_ex, message, text_x, text_y, text_align_h,
+                     text_align_v);
   dialog_ex_set_icon(dialog_ex, 1, 1, icon);
-  dialog_ex_set_center_button_text(dialog_ex, center_button_text);
+
+  // Set the center button text only if it is not NULL
+  if (center_button_text) {
+    dialog_ex_set_center_button_text(dialog_ex, center_button_text);
+  }
+
   dialog_ex_set_left_button_text(dialog_ex, "Exit");
   dialog_ex_set_result_callback(dialog_ex, setup_dialog_callback);
   dialog_ex_set_context(dialog_ex, app);
 }
 
 static void uart_check_task(App *app) {
-  // Update dialog to show checking board state
   FURI_LOG_T(TAG, "Updating dialog: Checking the board ...");
-  setup_dialog_update(app, "Checking the board ...", &I_dolphinWait_59x54,
-                      NULL);
 
-  // wait 3 seconds
-  furi_delay_ms(3000);
-
-  // Check the UART version
   bool version_ok = uart_terminal_uart_send_version_command(app->uart);
+
+  // Update the dialog with the current message
+  setup_dialog_update(app, "esp32 check", &I_WifiCheck_128_64, NULL, 57, 58,
+                      AlignLeft, AlignCenter);
 
   if (version_ok) {
     // Update dialog to show success result
     FURI_LOG_T(TAG, "Updating dialog: Board checked");
-    setup_dialog_update(app, "Board checked", &I_DolphinReadingSuccess_59x63,
-                        "Continue");
+    setup_dialog_update(app, "Board checked", &I_esp32Success, "Continue", 53,
+                        20, AlignLeft, AlignCenter);
   } else {
     // Update dialog to show failure result
     FURI_LOG_T(TAG, "Updating dialog: No board or wrong version");
-    setup_dialog_update(app, "No board or wrong version",
-                        &I_DolphinReadingSuccess_59x63, "Retry");
+    setup_dialog_update(app, "Oh no ! No board or missing firmware.", &I_error,
+                        "Retry", 60, 25, AlignLeft, AlignCenter);
   }
 }
 
@@ -81,9 +87,9 @@ void scene_on_enter_setup_dialog(void *context) {
 
   // Update dialog to show welcome message
   char welcome_message[64];
-  snprintf(welcome_message, sizeof(welcome_message), "Welcome to Postman v%s",
-           VERSION);
-  setup_dialog_update(app, welcome_message, &I_dolphinWait_59x54, NULL);
+  snprintf(welcome_message, sizeof(welcome_message), "v%s", VERSION);
+  setup_dialog_update(app, welcome_message, &I_Postman_128_64, NULL, 73, 40,
+                      AlignLeft, AlignCenter);
 
   // Start the timer for the welcome message
   furi_timer_start(app->timer, WELCOME_DURATION_MS);
