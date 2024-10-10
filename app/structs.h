@@ -2,12 +2,6 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#include <furi.h>
-#include <furi_hal.h>
-#include <furi_hal_gpio.h>
-#include <furi_hal_serial.h>
-#include <stdbool.h>
-
 typedef enum {
   SetUpDialog,
   MainMenu,
@@ -64,13 +58,9 @@ typedef enum {
   Get_SetUrl,
   Get_Execute,
   Get_Stream_Execute,
-} GEtActionMenu;
+} GetActionMenu;
 
 // Event Flags for UART Worker Thread
-typedef enum {
-  WorkerEvtStop = (1 << 0),
-  WorkerEvtRxDone = (1 << 1),
-} WorkerEvtFlags;
 
 typedef enum {
   SetupDialogStateWelcome,
@@ -78,6 +68,6 @@ typedef enum {
   SetupDialogStateResult
 } SetupDialogState;
 
-#define RX_BUF_SIZE 1024
+#define RX_BUF_SIZE (320)
 
 #endif // STRUCTS_H

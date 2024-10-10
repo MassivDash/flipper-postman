@@ -1,8 +1,6 @@
 #ifndef SETUP_DIALOG_H
 #define SETUP_DIALOG_H
 
-#include <furi.h>
-#include <furi_hal.h>
 #include <gui/elements.h>
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>

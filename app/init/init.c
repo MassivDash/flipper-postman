@@ -1,8 +1,6 @@
-/** initialise app data, scene manager, and view dispatcher */
-
 #include "../app.h"
 #include "../scene/scene.h"
-#include "../uart/uart.h" // Include the UART header file
+#include "../uart/uart.h"
 #define TAG "postman_app"
 
 App *init() {
@@ -12,7 +10,14 @@ App *init() {
     FURI_LOG_E(TAG, "Failed to allocate memory for App");
     return NULL;
   }
+  app->uart = uart_terminal_uart_init(app);
+  if (!app->uart) {
+    FURI_LOG_E(TAG, "Failed to initialize UART");
+    free(app);
+    return NULL;
+  }
   scene_manager_init(app);
   view_dispatcher_init(app);
+
   return app;
 }

@@ -1,7 +1,8 @@
 #ifndef APP_H
 #define APP_H
 
-#include "structs.h"
+#include "./structs.h"
+#include "./uart/uart.h"
 #include <gui/modules/dialog_ex.h>
 #include <gui/modules/menu.h>
 #include <gui/modules/number_input.h>
@@ -22,7 +23,9 @@ typedef struct {
   Menu *menu;
   DialogEx *dialog;
   FuriTimer *timer;
+  Uart *uart;
   SetupDialogState dialog_state;
+  uint8_t uart_ch;
 } App;
 
 #endif // APP_H

@@ -1,7 +1,6 @@
 #include "../../app.h"
+
 #include "../../uart/uart.h"
-#include <furi.h>
-#include <furi_hal.h>
 #include <gui/modules/dialog_ex.h>
 #include <gui/view_dispatcher.h>
 #include <postmanflipx_icons.h>
@@ -35,10 +34,20 @@ static void uart_check_task(App *app) {
   // wait 3 seconds
   furi_delay_ms(3000);
 
-  // Update dialog to show result
-  FURI_LOG_T(TAG, "Updating dialog: Board checked");
-  setup_dialog_update(app, "Board checked", &I_DolphinReadingSuccess_59x63,
-                      "Continue");
+  // Check the UART version
+  bool version_ok = uart_terminal_uart_send_version_command(app->uart);
+
+  if (version_ok) {
+    // Update dialog to show success result
+    FURI_LOG_T(TAG, "Updating dialog: Board checked");
+    setup_dialog_update(app, "Board checked", &I_DolphinReadingSuccess_59x63,
+                        "Continue");
+  } else {
+    // Update dialog to show failure result
+    FURI_LOG_T(TAG, "Updating dialog: No board or wrong version");
+    setup_dialog_update(app, "No board or wrong version",
+                        &I_DolphinReadingSuccess_59x63, "Retry");
+  }
 }
 
 static void setup_dialog_timer_callback(void *context) {

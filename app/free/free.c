@@ -1,5 +1,6 @@
 #include "../app.h"
 #include "../structs.h"
+#include "../uart/uart.h"
 #include <furi.h>
 #include <gui/gui.h>
 #include <gui/icon_i.h>
@@ -14,6 +15,7 @@
 
 void app_free(App *app) {
   FURI_LOG_T(TAG, "free");
+  uart_terminal_uart_free(app->uart);
   scene_manager_free(app->scene_manager);
   view_dispatcher_remove_view(app->view_dispatcher, AppView_SetupDialog);
   view_dispatcher_remove_view(app->view_dispatcher, AppView_Menu);
