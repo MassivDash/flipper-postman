@@ -51,6 +51,14 @@ static void uart_check_task(App *app) {
     // Update dialog to show success result
     FURI_LOG_T(TAG, "Updating dialog: Board checked");
     app->status = BOARD_CONNECTED_WIFI_OFF;
+
+    bool connected = uart_terminal_uart_check_status(app->uart);
+
+  
+    if (connected) {
+      app->status = BOARD_CONNECTED_WIFI_ON;
+    }
+
     setup_dialog_update(app, "esp32 is ready", &I_esp32Success, "continue",
                         "exit", 63, 5, AlignLeft, AlignCenter);
   } else {
@@ -119,15 +127,16 @@ bool scene_on_event_setup_dialog(void *context, SceneManagerEvent event) {
         scene_manager_next_scene(app->scene_manager, MainMenu);
         consumed = true;
         break;
+      case BOARD_CONNECTED_WIFI_ON:
+        // Switch to the main menu view
+        scene_manager_next_scene(app->scene_manager, MainMenu);
+        consumed = true;
+        break;
       case BOARD_ERROR:
         // Restart the UART check task
         app->dialog_state = SetupDialogStateChecking;
         uart_check_task(app);
         consumed = true;
-        break;
-      case BOARD_CONNECTED_WIFI_ON:
-        // Do nothing
-        consumed = false;
         break;
       }
 

@@ -13,3 +13,4 @@ void uart_terminal_uart_tx(Uart *uart, uint8_t *data, size_t len);
 Uart *uart_terminal_uart_init(void *context);
 void uart_terminal_uart_free(Uart *uart);
 bool uart_terminal_uart_send_version_command(Uart *uart);
+bool uart_terminal_uart_check_status(Uart *uart);

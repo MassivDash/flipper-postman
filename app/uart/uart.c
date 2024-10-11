@@ -179,6 +179,40 @@ bool uart_terminal_uart_send_version_command(Uart *uart) {
   return false;
 }
 
+bool uart_terminal_uart_check_status(Uart *uart) {
+  if (!uart) {
+    FURI_LOG_E("UART", "Invalid UART context.");
+    return false;
+  }
+
+  const char *status_command = "WIFI_STATUS";
+  uart_terminal_uart_tx(uart, (uint8_t *)status_command,
+                        strlen(status_command));
+
+  // Wait for the response
+  uint32_t events =
+      furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 2000);
+  if (events & WorkerEvtRxDone) {
+    // Split the response at the newline character
+    char *newline_pos = strchr(uart->last_response, '\n');
+    if (newline_pos) {
+      *newline_pos = '\0'; // Terminate the string at the newline character
+    }
+
+    // print the response
+
+    FURI_LOG_E("UART", "Response: %s", uart->last_response);
+
+    if (strstr(uart->last_response, "WIFI_STATUS: CONNECTED")) {
+      return true;
+    } else if (strstr(uart->last_response, "WIFI_STATUS: DISCONNECTED")) {
+      return false;
+    }
+  }
+  FURI_LOG_E("UART", "No response received from the board.");
+  return false;
+}
+
 void uart_terminal_uart_free(Uart *uart) {
   if (!uart) {
     FURI_LOG_E("UART", "Invalid UART context.");

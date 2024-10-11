@@ -26,18 +26,25 @@ void scene_on_enter_main_menu(void *context) {
   App *app = context;
   menu_reset(app->menu);
 
-  menu_add_item(app->menu, "Wifi (Disconnected)", &A_Connect_14,
-                MenuSelection_Connect, menu_callback_main_menu, app);
-  menu_add_item(app->menu, "Get", &A_Get_14, MenuSelection_Get,
-                menu_callback_main_menu, app);
-  menu_add_item(app->menu, "Post", &A_Post_14, MenuSelection_Post,
-                menu_callback_main_menu, app);
-  menu_add_item(app->menu, "Http Builder", &A_Settings_14,
-                MenuSelection_Build_http, menu_callback_main_menu, app);
-  menu_add_item(app->menu, "Download Files", &A_Get_14, MenuSelection_Download,
-                menu_callback_main_menu, app);
-  menu_add_item(app->menu, "Open listing port", &A_Listen_14,
-                MenuSelection_Listen, menu_callback_main_menu, app);
+  if (app->status == BOARD_CONNECTED_WIFI_ON) {
+    menu_add_item(app->menu, "Wifi (Connected)", &A_Connect_14,
+                  MenuSelection_Connect, menu_callback_main_menu, app);
+    menu_add_item(app->menu, "Get", &A_Get_14, MenuSelection_Get,
+                  menu_callback_main_menu, app);
+    menu_add_item(app->menu, "Post", &A_Post_14, MenuSelection_Post,
+                  menu_callback_main_menu, app);
+    menu_add_item(app->menu, "Http Builder", &A_Settings_14,
+                  MenuSelection_Build_http, menu_callback_main_menu, app);
+    menu_add_item(app->menu, "Download Files", &A_Get_14,
+                  MenuSelection_Download, menu_callback_main_menu, app);
+    menu_add_item(app->menu, "Open listing port", &A_Listen_14,
+                  MenuSelection_Listen, menu_callback_main_menu, app);
+
+  } else {
+    menu_add_item(app->menu, "Wifi (Disconnected)", &A_Connect_14,
+                  MenuSelection_Connect, menu_callback_main_menu, app);
+  }
+
   menu_add_item(app->menu, "About", &A_About_14, MenuSelection_About,
                 menu_callback_main_menu, app);
 
