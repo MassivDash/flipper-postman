@@ -36,9 +36,9 @@ void scene_on_enter_main_menu(void *context) {
                 MenuSelection_Build_http, menu_callback_main_menu, app);
   menu_add_item(app->menu, "Download Files", &A_Get_14, MenuSelection_Download,
                 menu_callback_main_menu, app);
-  menu_add_item(app->menu, "Open listing port", &A_ViewTasks_14,
+  menu_add_item(app->menu, "Open listing port", &A_Listen_14,
                 MenuSelection_Listen, menu_callback_main_menu, app);
-  menu_add_item(app->menu, "About", &A_ViewTasks_14, MenuSelection_About,
+  menu_add_item(app->menu, "About", &A_About_14, MenuSelection_About,
                 menu_callback_main_menu, app);
 
   view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Menu);
