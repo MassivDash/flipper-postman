@@ -17,6 +17,12 @@
 #define KEY_NAME_SIZE 22
 #define TEXT_STORE_SIZE 40
 
+typedef enum {
+  BOARD_CONNECTED_WIFI_OFF,
+  BOARD_CONNECTED_WIFI_ON,
+  BOARD_ERROR
+} UartStatus;
+
 typedef struct {
   SceneManager *scene_manager;
   ViewDispatcher *view_dispatcher;
@@ -26,6 +32,7 @@ typedef struct {
   Uart *uart;
   SetupDialogState dialog_state;
   uint8_t uart_ch;
+  UartStatus status;
 } App;
 
 #endif // APP_H
