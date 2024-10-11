@@ -59,6 +59,7 @@ void view_dispatcher_init(App *app) {
   FURI_LOG_D(TAG, "view_dispatcher_init allocating views");
   app->menu = menu_alloc();
   app->dialog = dialog_ex_alloc();
+  app->submenu = submenu_alloc();
 
   // Initialize and start the timer to update every second
   // app->timer = furi_timer_alloc(task_continue_timer_callback,

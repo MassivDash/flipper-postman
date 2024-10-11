@@ -21,6 +21,7 @@ void app_free(App *app) {
   view_dispatcher_remove_view(app->view_dispatcher, AppView_Menu);
   view_dispatcher_free(app->view_dispatcher);
   menu_free(app->menu);
+  submenu_free(app->submenu);
   dialog_ex_free(app->dialog);
   furi_timer_free(app->timer);
   furi_record_close(RECORD_STORAGE);

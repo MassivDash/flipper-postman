@@ -5,7 +5,7 @@
 typedef enum {
   SetUpDialog,
   MainMenu,
-  // Connect,
+  Connect,
   // Get,
   // Post,
   // Build_http,
@@ -18,7 +18,7 @@ typedef enum {
 typedef enum {
   AppView_SetupDialog,
   AppView_Menu,
-  // AppView_Connect,
+  AppView_Connect,
   // AppView_Get,
   // AppView_Post,
   // AppView_Build_http,
@@ -31,7 +31,7 @@ typedef enum {
 typedef enum {
   AppEvent_SetupDialog,
   AppEvent_MainMenu,
-  // AppEvent_Connect,
+  AppEvent_Connect,
   // AppEvent_Get,
   // AppEvent_Post,
   // AppEvent_Build_http,
@@ -68,6 +68,28 @@ typedef enum {
   SetupDialogStateResult
 } SetupDialogState;
 
+typedef enum {
+  WorkerEvtStop = (1 << 0),
+  WorkerEvtRxDone = (1 << 1),
+} WorkerEvtFlags;
+
+typedef struct {
+  const char *name;
+  const char *description;
+  void (*execute)(const char *argument);
+} Command;
+
 #define RX_BUF_SIZE (320)
+#define MAX_WIFI_NETWORKS 20
+#define MAX_SSID_LENGTH 32
+
+typedef struct {
+  char ssid[MAX_SSID_LENGTH];
+} WifiNetwork;
+
+typedef struct {
+  WifiNetwork networks[MAX_WIFI_NETWORKS];
+  int selected_network;
+} AvailableWifiList;
 
 #endif // STRUCTS_H

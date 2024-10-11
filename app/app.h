@@ -27,12 +27,14 @@ typedef struct {
   SceneManager *scene_manager;
   ViewDispatcher *view_dispatcher;
   Menu *menu;
+  Submenu *submenu;
   DialogEx *dialog;
   FuriTimer *timer;
   Uart *uart;
   SetupDialogState dialog_state;
   uint8_t uart_ch;
   UartStatus status;
+  AvailableWifiList wifi_list;
 } App;
 
 #endif // APP_H
