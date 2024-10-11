@@ -14,10 +14,8 @@ struct Uart {
   uint8_t rx_buf[RX_BUF_SIZE + 1];
   void (*handle_rx_data_cb)(uint8_t *buf, size_t len, void *context);
   FuriHalSerialHandle *serial_handle;
-  char last_response[1024]; // Buffer to store the last response
+  char last_response[2096]; // Buffer to store the last response
 };
-
-extern Command commands[];
 
 void uart_terminal_uart_set_handle_rx_data_cb(
     Uart *uart,
@@ -38,7 +36,6 @@ void uart_terminal_uart_on_irq_cb(FuriHalSerialHandle *handle,
     furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
   }
 }
-
 static int32_t uart_worker(void *context) {
   Uart *uart = (Uart *)context;
   size_t response_len = 0;
@@ -84,6 +81,7 @@ static int32_t uart_worker(void *context) {
 }
 
 bool uart_terminal_uart_tx(Uart *uart, uint8_t *data, size_t len) {
+  FURI_LOG_D("UART", "Command: %s", data);
   if (!uart || !uart->serial_handle) {
     FURI_LOG_E("UART", "Invalid UART or serial handle.");
     return false;
@@ -122,7 +120,7 @@ Uart *uart_terminal_uart_init(void *context) {
   }
 
   furi_thread_set_name(uart->rx_thread, "UART_TerminalUartRxThread");
-  furi_thread_set_stack_size(uart->rx_thread, 512);
+  furi_thread_set_stack_size(uart->rx_thread, 2096);
   furi_thread_set_context(uart->rx_thread, uart);
   furi_thread_set_callback(uart->rx_thread, uart_worker);
 
@@ -144,6 +142,31 @@ Uart *uart_terminal_uart_init(void *context) {
                                  uart_terminal_uart_on_irq_cb, uart, false);
 
   return uart;
+}
+
+void uart_terminal_uart_free(Uart *uart) {
+  if (!uart) {
+    FURI_LOG_E("UART", "Invalid UART context.");
+    return;
+  }
+
+  if (uart->serial_handle) {
+    furi_hal_serial_async_rx_stop(uart->serial_handle);
+    furi_hal_serial_deinit(uart->serial_handle);
+    furi_hal_serial_control_release(uart->serial_handle);
+  }
+
+  if (uart->rx_thread) {
+    furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtStop);
+    furi_thread_join(uart->rx_thread);
+    furi_thread_free(uart->rx_thread);
+  }
+
+  if (uart->rx_stream) {
+    furi_stream_buffer_free(uart->rx_stream);
+  }
+
+  free(uart);
 }
 
 bool uart_terminal_uart_send_version_command(Uart *uart) {
@@ -183,7 +206,7 @@ bool uart_terminal_uart_check_status(Uart *uart) {
     return false;
   }
 
-  const char *status_command = "WIFI_STATUS";
+  const char *status_command = "WIFI_STATUS\n";
   uart_terminal_uart_tx(uart, (uint8_t *)status_command,
                         strlen(status_command));
 
@@ -211,94 +234,93 @@ bool uart_terminal_uart_check_status(Uart *uart) {
   return false;
 }
 
-void uart_terminal_uart_free(Uart *uart) {
-  if (!uart) {
-    FURI_LOG_E("UART", "Invalid UART context.");
-    return;
-  }
-
-  if (uart->serial_handle) {
-    furi_hal_serial_async_rx_stop(uart->serial_handle);
-    furi_hal_serial_deinit(uart->serial_handle);
-    furi_hal_serial_control_release(uart->serial_handle);
-  }
-
-  if (uart->rx_thread) {
-    furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtStop);
-    furi_thread_join(uart->rx_thread);
-    furi_thread_free(uart->rx_thread);
-  }
-
-  if (uart->rx_stream) {
-    furi_stream_buffer_free(uart->rx_stream);
-  }
-
-  free(uart);
-}
-
-extern Uart *uart; // Assuming uart is defined elsewhere
-
-bool listWiFiCommand(const char *argument) {
+bool listWiFiCommand(Uart *uart, const char *argument) {
   UNUSED(argument);
   FURI_LOG_D("UART_CMDS", "WIFI_LIST: <list>");
   // Send the command to the UART
   const char *command = "LIST_WIFI\n";
   if (!uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command))) {
-    FURI_LOG_E("UART_CMDS", "Failed to send LIST_WIFI command.");
+    FURI_LOG_E("UART_CMDS", "Failed to retrieve WiFi list.");
     return false;
   }
 
   // Wait for the response
   uint32_t events =
-      furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 2000);
+      furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 6000);
   if (events & WorkerEvtRxDone) {
-    // Split the response at the newline character
-    char *newline_pos = strchr(uart->last_response, '\n');
-    if (newline_pos) {
-      *newline_pos = '\0'; // Terminate the string at the newline character
-    }
+    // LOG the response
+    FURI_LOG_E("UART", "Response: %s", uart->last_response);
 
-    // Check if the response starts with "WIFI_LIST: "
-    if (strncmp(uart->last_response, "WIFI_LIST: ", 11) == 0) {
-      char *ssid_list = uart->last_response + 11;
-      char *token = strtok(ssid_list, ",");
-      int index = 0;
+    // Directly start parsing the response
+    char *ssid_list_start = uart->last_response;
 
-      // Clear the existing wifi_list
-      memset(&uart->app->wifi_list, 0, sizeof(AvailableWifiList));
-      uart->app->wifi_list.selected_network = -1;
+    FURI_LOG_D("UART_CMDS", "SSID list starts at: %s", ssid_list_start);
 
-      // Parse the SSIDs and populate the wifi_list
-      while (token != NULL && index < MAX_WIFI_NETWORKS) {
-        strncpy(uart->app->wifi_list.networks[index].ssid, token,
+    char *start = ssid_list_start;
+    char *end = ssid_list_start;
+    int index = 0;
+
+    // Clear the existing wifi_list
+    memset(&uart->app->wifi_list, 0, sizeof(AvailableWifiList));
+    uart->app->wifi_list.selected_network = -1;
+
+    // Parse the SSIDs and populate the wifi_list
+    while (*end != '\0' && index < MAX_WIFI_NETWORKS) {
+      if (*end == ',') {
+        *end = '\0';
+
+        // Trim leading spaces
+        while (*start == ' ') {
+          start++;
+        }
+
+        strncpy(uart->app->wifi_list.networks[index].ssid, start,
                 MAX_SSID_LENGTH - 1);
         uart->app->wifi_list.networks[index].ssid[MAX_SSID_LENGTH - 1] =
             '\0'; // Ensure null-termination
-        token = strtok(NULL, ",");
+        FURI_LOG_D("UART_CMDS", "Parsed SSID: %s",
+                   uart->app->wifi_list.networks[index].ssid);
+        start = end + 1;
         index++;
       }
-
-      return true;
+      end++;
     }
+
+    // Add the last SSID if there is no trailing comma
+    if (*start != '\0' && index < MAX_WIFI_NETWORKS) {
+      // Trim leading spaces
+      while (*start == ' ') {
+        start++;
+      }
+
+      strncpy(uart->app->wifi_list.networks[index].ssid, start,
+              MAX_SSID_LENGTH - 1);
+      uart->app->wifi_list.networks[index].ssid[MAX_SSID_LENGTH - 1] =
+          '\0'; // Ensure null-termination
+      FURI_LOG_D("UART_CMDS", "Parsed SSID: %s",
+                 uart->app->wifi_list.networks[index].ssid);
+    }
+
+    return true;
   }
 
   FURI_LOG_E("UART_CMDS", "Failed to retrieve WiFi list.");
   return false;
 }
 
-bool setSSIDCommand(const char *argument) {
+bool setSSIDCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "WIFI_SSID: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool setPasswordCommand(const char *argument) {
+bool setPasswordCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "WIFI_PASSWORD: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool activateWiFiCommand(const char *argument) {
+bool activateWiFiCommand(Uart *uart, const char *argument) {
   UNUSED(argument);
   FURI_LOG_D("UART_CMDS", "WIFI_CONNECT: Connecting to WiFi...");
   // Send the command to the UART
@@ -306,7 +328,7 @@ bool activateWiFiCommand(const char *argument) {
   return uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command));
 }
 
-bool disconnectWiFiCommand(const char *argument) {
+bool disconnectWiFiCommand(Uart *uart, const char *argument) {
   UNUSED(argument);
   FURI_LOG_D("UART_CMDS", "WIFI_DISCONNECT: Wifi disconnected");
   // Send the command to the UART
@@ -314,7 +336,7 @@ bool disconnectWiFiCommand(const char *argument) {
   return uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command));
 }
 
-bool getCommand(const char *argument) {
+bool getCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS",
              "GET: %s\nSTATUS: <number>\nRESPONSE:\n<response>\nRESPONSE_END",
              argument);
@@ -322,7 +344,7 @@ bool getCommand(const char *argument) {
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool getStreamCommand(const char *argument) {
+bool getStreamCommand(Uart *uart, const char *argument) {
   FURI_LOG_D(
       "UART_CMDS",
       "GET_STREAM: %s\nSTATUS: <number>\nSTREAM:\n<streamed data>\nSTREAM_END",
@@ -331,7 +353,7 @@ bool getStreamCommand(const char *argument) {
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool postCommand(const char *argument) {
+bool postCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS",
              "POST: %s\nPayload: <json_payload>\nSTATUS: "
              "<number>\nRESPONSE:\n<response>\nRESPONSE_END",
@@ -340,37 +362,37 @@ bool postCommand(const char *argument) {
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool buildHttpMethodCommand(const char *argument) {
+bool buildHttpMethodCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "HTTP_SET_METHOD: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool buildHttpUrlCommand(const char *argument) {
+bool buildHttpUrlCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "HTTP_URL: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool buildHttpHeaderCommand(const char *argument) {
+bool buildHttpHeaderCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "HTTP_ADD_HEADER: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool buildHttpPayloadCommand(const char *argument) {
+bool buildHttpPayloadCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "HTTP_SET_PAYLOAD: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool removeHttpHeaderCommand(const char *argument) {
+bool removeHttpHeaderCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "HTTP_REMOVE_HEADER: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool resetHttpConfigCommand(const char *argument) {
+bool resetHttpConfigCommand(Uart *uart, const char *argument) {
   UNUSED(argument);
   FURI_LOG_D("UART_CMDS", "HTTP_CONFIG_REST: All configurations reset");
   // Send the command to the UART
@@ -378,19 +400,19 @@ bool resetHttpConfigCommand(const char *argument) {
   return uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command));
 }
 
-bool buildHttpShowResponseHeadersCommand(const char *argument) {
+bool buildHttpShowResponseHeadersCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "HTTP_BUILDER_SHOW_RESPONSE_HEADERS: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool buildHttpImplementationCommand(const char *argument) {
+bool buildHttpImplementationCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "HTTP_SET_IMPLEMENTATION: %s", argument);
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
 }
 
-bool executeHttpCallCommand(const char *argument) {
+bool executeHttpCallCommand(Uart *uart, const char *argument) {
   UNUSED(argument);
   FURI_LOG_D("UART_CMDS", "EXECUTE_HTTP_CALL");
   // Send the command to the UART
@@ -398,13 +420,9 @@ bool executeHttpCallCommand(const char *argument) {
   return uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command));
 }
 
-bool connectCommand(const char *argument) {
+bool connectCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "WIFI_SSID: <SSID>\nWIFI_PASSWORD: "
                           "<password>\nWIFI_CONNECT: Connecting to WiFi...");
   // Send the command to the UART
   return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
-}
-
-void initializeCommands() {
-  // Initialization logic if needed
 }

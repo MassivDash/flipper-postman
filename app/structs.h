@@ -79,7 +79,7 @@ typedef struct {
   void (*execute)(const char *argument);
 } Command;
 
-#define RX_BUF_SIZE (320)
+#define RX_BUF_SIZE (4096)
 #define MAX_WIFI_NETWORKS 20
 #define MAX_SSID_LENGTH 32
 

@@ -5,22 +5,25 @@
 #include <gui/modules/dialog_ex.h>
 #include <gui/view.h>
 
+#include "./connect/connect.h"
 #include "./setup_dialog/setup_dialog.h"
 
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
 void (*const scene_on_enter_handlers[])(void *) = {scene_on_enter_setup_dialog,
-                                                   scene_on_enter_main_menu};
+                                                   scene_on_enter_main_menu,
+                                                   scene_on_enter_connect};
 
 /** collection of all scene on event handlers - in the same order as their enum
  */
 bool (*const scene_on_event_handlers[])(void *, SceneManagerEvent) = {
-    scene_on_event_setup_dialog, scene_on_event_main_menu};
+    scene_on_event_setup_dialog, scene_on_event_main_menu,
+    scene_on_event_connect};
 
 /** collection of all scene on exit handlers - in the same order as their enum
  */
-void (*const scene_on_exit_handlers[])(void *) = {scene_on_exit_setup_dialog,
-                                                  scene_on_exit_main_menu};
+void (*const scene_on_exit_handlers[])(void *) = {
+    scene_on_exit_setup_dialog, scene_on_exit_main_menu, scene_on_exit_connect};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {
@@ -82,4 +85,7 @@ void view_dispatcher_init(App *app) {
 
   view_dispatcher_add_view(app->view_dispatcher, AppView_Menu,
                            menu_get_view(app->menu));
+
+  view_dispatcher_add_view(app->view_dispatcher, AppView_Connect,
+                           submenu_get_view(app->submenu));
 }

@@ -14,3 +14,23 @@ Uart *uart_terminal_uart_init(void *context);
 void uart_terminal_uart_free(Uart *uart);
 bool uart_terminal_uart_send_version_command(Uart *uart);
 bool uart_terminal_uart_check_status(Uart *uart);
+
+// Cmds
+bool listWiFiCommand(Uart *uart, const char *argument);
+bool setSSIDCommand(Uart *uart, const char *argument);
+bool setPasswordCommand(Uart *uart, const char *argument);
+bool activateWiFiCommand(Uart *uart, const char *argument);
+bool disconnectWiFiCommand(Uart *uart, const char *argument);
+bool getCommand(Uart *uart, const char *argument);
+bool getStreamCommand(Uart *uart, const char *argument);
+bool postCommand(Uart *uart, const char *argument);
+bool buildHttpMethodCommand(Uart *uart, const char *argument);
+bool buildHttpUrlCommand(Uart *uart, const char *argument);
+bool buildHttpHeaderCommand(Uart *uart, const char *argument);
+bool buildHttpPayloadCommand(Uart *uart, const char *argument);
+bool removeHttpHeaderCommand(Uart *uart, const char *argument);
+bool resetHttpConfigCommand(Uart *uart, const char *argument);
+bool buildHttpShowResponseHeadersCommand(Uart *uart, const char *argument);
+bool buildHttpImplementationCommand(Uart *uart, const char *argument);
+bool executeHttpCallCommand(Uart *uart, const char *argument);
+bool connectCommand(Uart *uart, const char *argument);
