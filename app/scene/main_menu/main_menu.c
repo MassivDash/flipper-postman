@@ -26,9 +26,19 @@ void scene_on_enter_main_menu(void *context) {
   App *app = context;
   menu_reset(app->menu);
 
-  menu_add_item(app->menu, "Connect", NULL, MenuSelection_Connect,
+  menu_add_item(app->menu, "Wifi (Disconnected)", &A_Connect_14,
+                MenuSelection_Connect, menu_callback_main_menu, app);
+  menu_add_item(app->menu, "Get", &A_Get_14, MenuSelection_Get,
                 menu_callback_main_menu, app);
-  menu_add_item(app->menu, "GET", &A_ViewTasks_14, MenuSelection_Get,
+  menu_add_item(app->menu, "Post", &A_Post_14, MenuSelection_Post,
+                menu_callback_main_menu, app);
+  menu_add_item(app->menu, "Http Builder", &A_Settings_14,
+                MenuSelection_Build_http, menu_callback_main_menu, app);
+  menu_add_item(app->menu, "Download Files", &A_Get_14, MenuSelection_Download,
+                menu_callback_main_menu, app);
+  menu_add_item(app->menu, "Open listing port", &A_ViewTasks_14,
+                MenuSelection_Listen, menu_callback_main_menu, app);
+  menu_add_item(app->menu, "About", &A_ViewTasks_14, MenuSelection_About,
                 menu_callback_main_menu, app);
 
   view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Menu);
