@@ -35,6 +35,7 @@ typedef struct {
   uint8_t uart_ch;
   UartStatus status;
   AvailableWifiList wifi_list;
+  File *file;
 } App;
 
 #endif // APP_H
