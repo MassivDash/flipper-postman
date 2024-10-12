@@ -89,7 +89,7 @@ typedef struct {
 
 typedef struct {
   WifiNetwork networks[MAX_WIFI_NETWORKS];
-  int selected_network;
+  char selected_ssid[MAX_SSID_LENGTH];
 } AvailableWifiList;
 
 #endif // STRUCTS_H

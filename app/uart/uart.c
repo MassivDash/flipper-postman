@@ -233,12 +233,11 @@ bool uart_terminal_uart_check_status(Uart *uart) {
   FURI_LOG_E("UART", "No response received from the board.");
   return false;
 }
-
 bool listWiFiCommand(Uart *uart, const char *argument) {
   UNUSED(argument);
   FURI_LOG_D("UART_CMDS", "WIFI_LIST: <list>");
   // Send the command to the UART
-  const char *command = "LIST_WIFI\n";
+  const char *command = "WIFI_LIST\n";
   if (!uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command))) {
     FURI_LOG_E("UART_CMDS", "Failed to retrieve WiFi list.");
     return false;
@@ -262,7 +261,6 @@ bool listWiFiCommand(Uart *uart, const char *argument) {
 
     // Clear the existing wifi_list
     memset(&uart->app->wifi_list, 0, sizeof(AvailableWifiList));
-    uart->app->wifi_list.selected_network = -1;
 
     // Parse the SSIDs and populate the wifi_list
     while (*end != '\0' && index < MAX_WIFI_NETWORKS) {
@@ -299,6 +297,35 @@ bool listWiFiCommand(Uart *uart, const char *argument) {
           '\0'; // Ensure null-termination
       FURI_LOG_D("UART_CMDS", "Parsed SSID: %s",
                  uart->app->wifi_list.networks[index].ssid);
+    }
+
+    // Send the command to get the active SSID
+    const char *command_ssid = "WIFI_GET_ACTIVE_SSID\n";
+    if (!uart_terminal_uart_tx(uart, (uint8_t *)command_ssid,
+                               strlen(command_ssid))) {
+      FURI_LOG_E("UART_CMDS", "Failed to retrieve active SSID.");
+      return false;
+    }
+
+    // Wait for the response
+    events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 6000);
+    if (events & WorkerEvtRxDone) {
+      // LOG the response
+      FURI_LOG_E("UART", "Response: %s", uart->last_response);
+
+      // Check if the response contains the active SSID
+      if (strncmp(uart->last_response, "WIFI_GET_ACTIVE_SSID: ", 22) == 0) {
+        char *active_ssid = uart->last_response + 22;
+        if (strcmp(active_ssid, "Not connected") != 0) {
+          // Save the active SSID
+          strncpy(uart->app->wifi_list.selected_ssid, active_ssid,
+                  MAX_SSID_LENGTH - 1);
+          uart->app->wifi_list.selected_ssid[MAX_SSID_LENGTH - 1] =
+              '\0'; // Ensure null-termination
+          FURI_LOG_D("UART_CMDS", "Active SSID: %s",
+                     uart->app->wifi_list.selected_ssid);
+        }
+      }
     }
 
     return true;

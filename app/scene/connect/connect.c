@@ -9,20 +9,13 @@
 #define TAG "connect_app"
 
 void submenu_callback_select_wifi(void *context, uint32_t index) {
+  UNUSED(index);
   FURI_LOG_T(TAG, "submenu_callback_select_wifi");
   furi_assert(context);
   App *app = context;
 
-  if (index < MAX_WIFI_NETWORKS &&
-      app->wifi_list.networks[index].ssid[0] != '\0') {
-    // Set the selected network
-    app->wifi_list.selected_network = index;
-
-    // Handle the custom event
-    scene_manager_handle_custom_event(app->scene_manager, AppEvent_Connect);
-  } else {
-    FURI_LOG_W(TAG, "Invalid WiFi index: %lu", (unsigned long)index);
-  }
+  // Handle the custom event
+  scene_manager_handle_custom_event(app->scene_manager, AppEvent_Connect);
 }
 
 void submenu_callback_no_wifi(void *context, uint32_t index) {
@@ -31,6 +24,25 @@ void submenu_callback_no_wifi(void *context, uint32_t index) {
   App *app = context;
   scene_manager_search_and_switch_to_previous_scene(app->scene_manager,
                                                     MainMenu);
+}
+
+void trim_whitespace(char *str) {
+  char *end;
+
+  // Trim leading space
+  while (isspace((unsigned char)*str))
+    str++;
+
+  if (*str == 0) // All spaces?
+    return;
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while (end > str && isspace((unsigned char)*end))
+    end--;
+
+  // Write new null terminator
+  *(end + 1) = '\0';
 }
 
 void scene_on_enter_connect(void *context) {
@@ -55,20 +67,35 @@ void scene_on_enter_connect(void *context) {
   }
 
   // Clear the submenu and add the actual WiFi networks
-
   if (app->wifi_list.networks[0].ssid[0] != '\0') {
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "Available WiFi's");
+
     // Add WiFi networks to submenu
     for (size_t i = 0;
          i < MAX_WIFI_NETWORKS && app->wifi_list.networks[i].ssid[0] != '\0';
          i++) {
-      submenu_add_item(app->submenu, app->wifi_list.networks[i].ssid, i,
+      char display_name[MAX_SSID_LENGTH + 12]; // Extra space for "(connected)"
+
+      // Trim SSIDs
+      trim_whitespace(app->wifi_list.networks[i].ssid);
+      trim_whitespace(app->wifi_list.selected_ssid);
+
+      int comparison_result =
+          strcmp(app->wifi_list.networks[i].ssid, app->wifi_list.selected_ssid);
+      FURI_LOG_D(TAG, "Comparison result: %d", comparison_result);
+
+      if (comparison_result == 0) {
+        snprintf(display_name, sizeof(display_name), "%s (connected)",
+                 app->wifi_list.networks[i].ssid);
+        FURI_LOG_D(TAG, "SSID matched: %s", app->wifi_list.networks[i].ssid);
+      } else {
+        snprintf(display_name, sizeof(display_name), "%s",
+                 app->wifi_list.networks[i].ssid);
+      }
+      submenu_add_item(app->submenu, display_name, i,
                        submenu_callback_select_wifi, app);
     }
-  } else {
-    submenu_add_item(app->submenu, "No WiFi networks found", 0,
-                     submenu_callback_no_wifi, app);
   }
 }
 
