@@ -37,6 +37,7 @@ typedef struct {
   UartStatus status;
   AvailableWifiList wifi_list;
   File *file;
+  View *view;
 } App;
 
 #endif // APP_H

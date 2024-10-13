@@ -7,6 +7,7 @@ typedef enum {
   MainMenu,
   Connect,
   Connect_Details,
+  Connect_Ssid_Password,
   // Get,
   // Post,
   // Build_http,
@@ -21,6 +22,7 @@ typedef enum {
   AppView_Menu,
   AppView_Connect,
   AppView_Connect_Details,
+  AppView_Connect_Ssid_Password,
   // AppView_Get,
   // AppView_Post,
   // AppView_Build_http,
@@ -35,6 +37,7 @@ typedef enum {
   AppEvent_MainMenu,
   AppEvent_Connect,
   AppEvent_Connect_Details,
+  AppEvent_Connect_Ssid_Password,
   // AppEvent_Get,
   // AppEvent_Post,
   // AppEvent_Build_http,
@@ -97,5 +100,14 @@ typedef struct {
   char connected_ssid[MAX_SSID_LENGTH];
   char password_ssid[MAX_PASSWORD_LENGTH];
 } AvailableWifiList;
+
+typedef enum {
+  Details_Disconnect,
+  Details_Connect,
+  Details_SetPassword,
+  Details_SaveToCsv,
+  Details_MarkAsDefault,
+  Details_Forget
+} Connect_DetailsActionMenu;
 
 #endif // STRUCTS_H

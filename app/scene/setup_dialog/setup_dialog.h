@@ -5,8 +5,6 @@
 #include <gui/view.h>
 #include <gui/view_dispatcher.h>
 
-#define TAG "tracker_app"
-
 // SetupDialogModel struct
 typedef struct {
   char message[64];
