@@ -14,8 +14,11 @@
 #include <gui/view_dispatcher.h>
 #include <storage/storage.h>
 
+#include "./modules/uart_text_input/uart_text_input.h"
+
 #define KEY_NAME_SIZE 22
 #define TEXT_STORE_SIZE 40
+#define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
 
 typedef enum {
   BOARD_CONNECTED_WIFI_OFF,
@@ -37,7 +40,10 @@ typedef struct {
   UartStatus status;
   AvailableWifiList wifi_list;
   File *file;
-  View *view;
+  char text_input_store[UART_TERMINAL_TEXT_INPUT_STORE_SIZE + 1];
+  UART_TextInput *text_input;
+  bool is_custom_tx_string;
+  const char *selected_tx_string;
 } App;
 
 #endif // APP_H

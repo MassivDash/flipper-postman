@@ -27,6 +27,7 @@ void app_free(App *app) {
   menu_free(app->menu);
   submenu_free(app->submenu);
   dialog_ex_free(app->dialog);
+  uart_text_input_free(app->text_input);
   furi_timer_free(app->timer);
   furi_record_close(RECORD_STORAGE);
   free(app);

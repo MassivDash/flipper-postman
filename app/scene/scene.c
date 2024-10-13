@@ -70,7 +70,9 @@ void view_dispatcher_init(App *app) {
   app->dialog = dialog_ex_alloc();
   app->submenu = submenu_alloc();
   app->submenu_wifi = submenu_alloc();
-  app->view = view_alloc();
+  app->text_input = uart_text_input_alloc();
+  app->is_custom_tx_string = false;
+  app->selected_tx_string = "";
 
   // assign callback that pass events from views to the scene manager
   FURI_LOG_D(TAG, "view_dispatcher_init setting callbacks");
@@ -97,5 +99,5 @@ void view_dispatcher_init(App *app) {
                            submenu_get_view(app->submenu_wifi));
 
   view_dispatcher_add_view(app->view_dispatcher, AppView_Connect_Ssid_Password,
-                           app->view);
+                           uart_text_input_get_view(app->text_input));
 }
