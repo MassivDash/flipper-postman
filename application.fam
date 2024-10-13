@@ -2,7 +2,7 @@
 
 App(
     appid="postmanflipx",  # Must be unique
-    name="[esp32] Flipper Postman",  # Displayed in menus
+    name="[ESP32] Flipper Postman",  # Displayed in menus
     apptype=FlipperAppType.EXTERNAL,
     entry_point="app",
     stack_size=2 * 1024,

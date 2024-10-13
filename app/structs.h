@@ -6,6 +6,7 @@ typedef enum {
   SetUpDialog,
   MainMenu,
   Connect,
+  Connect_Details,
   // Get,
   // Post,
   // Build_http,
@@ -19,6 +20,7 @@ typedef enum {
   AppView_SetupDialog,
   AppView_Menu,
   AppView_Connect,
+  AppView_Connect_Details,
   // AppView_Get,
   // AppView_Post,
   // AppView_Build_http,
@@ -32,6 +34,7 @@ typedef enum {
   AppEvent_SetupDialog,
   AppEvent_MainMenu,
   AppEvent_Connect,
+  AppEvent_Connect_Details,
   // AppEvent_Get,
   // AppEvent_Post,
   // AppEvent_Build_http,
@@ -82,6 +85,7 @@ typedef struct {
 #define RX_BUF_SIZE (4096)
 #define MAX_WIFI_NETWORKS 20
 #define MAX_SSID_LENGTH 32
+#define MAX_PASSWORD_LENGTH 64
 
 typedef struct {
   char ssid[MAX_SSID_LENGTH];
@@ -90,6 +94,8 @@ typedef struct {
 typedef struct {
   WifiNetwork networks[MAX_WIFI_NETWORKS];
   char selected_ssid[MAX_SSID_LENGTH];
+  char connected_ssid[MAX_SSID_LENGTH];
+  char password_ssid[MAX_PASSWORD_LENGTH];
 } AvailableWifiList;
 
 #endif // STRUCTS_H

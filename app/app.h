@@ -28,6 +28,7 @@ typedef struct {
   ViewDispatcher *view_dispatcher;
   Menu *menu;
   Submenu *submenu;
+  Submenu *submenu_wifi;
   DialogEx *dialog;
   FuriTimer *timer;
   Uart *uart;

@@ -9,13 +9,17 @@
 #define TAG "connect_app"
 
 void submenu_callback_select_wifi(void *context, uint32_t index) {
-  UNUSED(index);
   FURI_LOG_T(TAG, "submenu_callback_select_wifi");
   furi_assert(context);
   App *app = context;
 
-  // Handle the custom event
-  scene_manager_handle_custom_event(app->scene_manager, AppEvent_Connect);
+  // Set the selected SSID
+  strncpy(app->wifi_list.selected_ssid, app->wifi_list.networks[index].ssid,
+          sizeof(app->wifi_list.selected_ssid) - 1);
+
+  // Handle the custom event to move to the connect details scene
+  scene_manager_handle_custom_event(app->scene_manager,
+                                    AppEvent_Connect_Details);
 }
 
 void submenu_callback_no_wifi(void *context, uint32_t index) {
@@ -79,16 +83,14 @@ void scene_on_enter_connect(void *context) {
 
       // Trim SSIDs
       trim_whitespace(app->wifi_list.networks[i].ssid);
-      trim_whitespace(app->wifi_list.selected_ssid);
+      trim_whitespace(app->wifi_list.connected_ssid);
 
-      int comparison_result =
-          strcmp(app->wifi_list.networks[i].ssid, app->wifi_list.selected_ssid);
-      FURI_LOG_D(TAG, "Comparison result: %d", comparison_result);
+      int comparison_result = strcmp(app->wifi_list.networks[i].ssid,
+                                     app->wifi_list.connected_ssid);
 
       if (comparison_result == 0) {
         snprintf(display_name, sizeof(display_name), "%s (connected)",
                  app->wifi_list.networks[i].ssid);
-        FURI_LOG_D(TAG, "SSID matched: %s", app->wifi_list.networks[i].ssid);
       } else {
         snprintf(display_name, sizeof(display_name), "%s",
                  app->wifi_list.networks[i].ssid);
@@ -106,10 +108,10 @@ bool scene_on_event_connect(void *context, SceneManagerEvent event) {
   switch (event.type) {
   case SceneManagerEventTypeCustom:
     switch (event.event) {
-    case AppEvent_Connect:
+    case AppEvent_Connect_Details:
       // Add log before switching to Connect
       FURI_LOG_I(TAG, "Switching to Connect");
-      scene_manager_next_scene(app->scene_manager, Connect);
+      scene_manager_next_scene(app->scene_manager, Connect_Details);
       consumed = true;
       break;
     }
@@ -128,8 +130,6 @@ void scene_on_exit_connect(void *context) {
   for (size_t i = 0;
        i < MAX_WIFI_NETWORKS && app->wifi_list.networks[i].ssid[0] != '\0';
        i++) {
-    FURI_LOG_T(TAG, "WiFi %lu: SSID: %s", (unsigned long)i,
-               app->wifi_list.networks[i].ssid);
   }
 
   submenu_reset(app->submenu);

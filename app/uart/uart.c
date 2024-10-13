@@ -318,12 +318,10 @@ bool listWiFiCommand(Uart *uart, const char *argument) {
         char *active_ssid = uart->last_response + 22;
         if (strcmp(active_ssid, "Not connected") != 0) {
           // Save the active SSID
-          strncpy(uart->app->wifi_list.selected_ssid, active_ssid,
+          strncpy(uart->app->wifi_list.connected_ssid, active_ssid,
                   MAX_SSID_LENGTH - 1);
-          uart->app->wifi_list.selected_ssid[MAX_SSID_LENGTH - 1] =
+          uart->app->wifi_list.connected_ssid[MAX_SSID_LENGTH - 1] =
               '\0'; // Ensure null-termination
-          FURI_LOG_D("UART_CMDS", "Active SSID: %s",
-                     uart->app->wifi_list.selected_ssid);
         }
       }
     }

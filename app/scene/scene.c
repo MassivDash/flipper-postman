@@ -6,24 +6,26 @@
 #include <gui/view.h>
 
 #include "./connect/connect.h"
+#include "./connect_details/connect_details.h"
 #include "./setup_dialog/setup_dialog.h"
 
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
-void (*const scene_on_enter_handlers[])(void *) = {scene_on_enter_setup_dialog,
-                                                   scene_on_enter_main_menu,
-                                                   scene_on_enter_connect};
+void (*const scene_on_enter_handlers[])(void *) = {
+    scene_on_enter_setup_dialog, scene_on_enter_main_menu,
+    scene_on_enter_connect, scene_on_enter_connect_details};
 
 /** collection of all scene on event handlers - in the same order as their enum
  */
 bool (*const scene_on_event_handlers[])(void *, SceneManagerEvent) = {
     scene_on_event_setup_dialog, scene_on_event_main_menu,
-    scene_on_event_connect};
+    scene_on_event_connect, scene_on_event_connect_details};
 
 /** collection of all scene on exit handlers - in the same order as their enum
  */
 void (*const scene_on_exit_handlers[])(void *) = {
-    scene_on_exit_setup_dialog, scene_on_exit_main_menu, scene_on_exit_connect};
+    scene_on_exit_setup_dialog, scene_on_exit_main_menu, scene_on_exit_connect,
+    scene_on_exit_connect_details};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {
@@ -63,6 +65,7 @@ void view_dispatcher_init(App *app) {
   app->menu = menu_alloc();
   app->dialog = dialog_ex_alloc();
   app->submenu = submenu_alloc();
+  app->submenu_wifi = submenu_alloc();
 
   // Initialize and start the timer to update every second
   // app->timer = furi_timer_alloc(task_continue_timer_callback,
@@ -88,4 +91,7 @@ void view_dispatcher_init(App *app) {
 
   view_dispatcher_add_view(app->view_dispatcher, AppView_Connect,
                            submenu_get_view(app->submenu));
+
+  view_dispatcher_add_view(app->view_dispatcher, AppView_Connect_Details,
+                           submenu_get_view(app->submenu_wifi));
 }

@@ -20,6 +20,7 @@ void app_free(App *app) {
   view_dispatcher_remove_view(app->view_dispatcher, AppView_SetupDialog);
   view_dispatcher_remove_view(app->view_dispatcher, AppView_Menu);
   view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect);
+  view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Details);
   view_dispatcher_free(app->view_dispatcher);
   menu_free(app->menu);
   submenu_free(app->submenu);
