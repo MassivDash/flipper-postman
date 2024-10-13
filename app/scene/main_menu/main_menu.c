@@ -3,7 +3,7 @@
 #include <datetime/datetime.h>
 #include <furi.h>
 
-#define TAG "tracker_app"
+#define TAG "postman_app"
 #include <postmanflipx_icons.h>
 
 /** main menu callback - sends a custom event to the scene manager based on the

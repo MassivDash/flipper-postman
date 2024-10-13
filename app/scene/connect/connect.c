@@ -57,7 +57,7 @@ void scene_on_enter_connect(void *context) {
   submenu_set_header(app->submenu, "Available WiFi's");
 
   // Add a dummy menu item indicating that the search is in progress
-  submenu_add_item(app->submenu, "Searching ...", 0, NULL, NULL);
+  submenu_add_item(app->submenu, "Scanning ...", 0, NULL, NULL);
 
   view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect);
 
