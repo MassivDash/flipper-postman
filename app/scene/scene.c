@@ -66,10 +66,19 @@ void view_dispatcher_init(App *app) {
 
   // allocate each view
   FURI_LOG_D(TAG, "view_dispatcher_init allocating views");
-  app->menu = menu_alloc();
+  // Start up and board checks
   app->dialog = dialog_ex_alloc();
+
+  // Main menu
+  app->menu = menu_alloc();
+
+  // Connect submenu (list wifi's)
   app->submenu = submenu_alloc();
+
+  // Connect details submenu (connect, disconnect, save to csv)
   app->submenu_wifi = submenu_alloc();
+
+  // Text input for ssid and password
   app->text_input = uart_text_input_alloc();
   app->is_custom_tx_string = false;
   app->selected_tx_string = "";

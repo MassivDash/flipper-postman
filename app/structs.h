@@ -89,6 +89,9 @@ typedef struct {
 #define MAX_WIFI_NETWORKS 20
 #define MAX_SSID_LENGTH 32
 #define MAX_PASSWORD_LENGTH 64
+#define CONNECT_CMD_BUFFER_SIZE                                                \
+  (16 + MAX_SSID_LENGTH + 1 + MAX_PASSWORD_LENGTH +                            \
+   1) // "WIFI_CONNECT: " + ssid + " " + password + null terminator
 
 typedef struct {
   char ssid[MAX_SSID_LENGTH];

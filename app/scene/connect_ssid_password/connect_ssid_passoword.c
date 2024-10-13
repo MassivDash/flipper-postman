@@ -44,6 +44,10 @@ bool scene_on_event_connect_ssid_password(void *context,
     if (event.event == AppEvent_Connect_Ssid_Password) {
       // Point to custom string to send
       app->selected_tx_string = app->text_input_store;
+      strncpy(app->wifi_list.password_ssid, app->text_input_store,
+              sizeof(app->wifi_list.password_ssid) - 1);
+      app->wifi_list.password_ssid[sizeof(app->wifi_list.password_ssid) - 1] =
+          '\0'; // Ensure null-termination
       scene_manager_previous_scene(app->scene_manager);
       consumed = true;
     }

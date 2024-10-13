@@ -1,5 +1,7 @@
+#include "./connect_details.h"
 #include "../../app.h"
 #include "../../structs.h"
+#include "../../uart/uart.h"
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/modules/submenu.h>
@@ -14,11 +16,42 @@ void submenu_callback_disconnect_connect(void *context, uint32_t index) {
   if (app->status == BOARD_CONNECTED_WIFI_ON) {
     // Disconnect logic here
     FURI_LOG_I(TAG, "Disconnecting from WiFi");
-    app->status = BOARD_CONNECTED_WIFI_OFF;
+    if (disconnectWiFiCommand(app->uart, NULL)) {
+
+      app->status = BOARD_CONNECTED_WIFI_OFF;
+      app->wifi_list.connected_ssid[0] = '\0';
+      scene_on_enter_connect_details(context);
+    } else {
+      FURI_LOG_E(TAG, "Failed to disconnect from WiFi");
+    }
   } else {
     // Connect logic here
     FURI_LOG_I(TAG, "Connecting to WiFi");
-    app->status = BOARD_CONNECTED_WIFI_ON;
+
+    // Creating the string for connect cmd, WIFI_CONNECT: <ssid> <password>
+    char connect_cmd[CONNECT_CMD_BUFFER_SIZE];
+
+    int ret =
+        snprintf(connect_cmd, sizeof(connect_cmd), "WIFI_CONNECT %s %s",
+                 app->wifi_list.selected_ssid, app->wifi_list.password_ssid);
+
+    if (ret < 0 || ret >= (int)sizeof(connect_cmd)) {
+      // Handle error: the output was truncated or an encoding error occurred
+      // You can log an error message or take appropriate action here
+      printf("Error: connect_cmd buffer is too small or encoding error "
+             "occurred.\n");
+    }
+
+    if (connectCommand(app->uart, connect_cmd)) {
+      app->status = BOARD_CONNECTED_WIFI_ON;
+      strncpy(app->wifi_list.connected_ssid, app->wifi_list.selected_ssid,
+              sizeof(app->wifi_list.connected_ssid) - 1);
+      app->wifi_list.connected_ssid[sizeof(app->wifi_list.connected_ssid) - 1] =
+          '\0'; // Ensure null-termination
+      scene_on_enter_connect_details(context);
+    } else {
+      FURI_LOG_E(TAG, "Failed to connect to WiFi");
+    }
   }
 
   // Refresh the scene
@@ -74,7 +107,6 @@ void scene_on_enter_connect_details(void *context) {
                    submenu_callback_save_to_csv, app);
   submenu_add_item(app->submenu_wifi, "Forget network", Details_Forget,
                    submenu_callback_save_to_csv, app);
-
   view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect_Details);
 }
 

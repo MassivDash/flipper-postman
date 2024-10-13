@@ -355,10 +355,31 @@ bool activateWiFiCommand(Uart *uart, const char *argument) {
 
 bool disconnectWiFiCommand(Uart *uart, const char *argument) {
   UNUSED(argument);
-  FURI_LOG_D("UART_CMDS", "WIFI_DISCONNECT: Wifi disconnected");
+  FURI_LOG_D("UART_CMDS", "WIFI_DEACTIVATE: Wifi disconnected");
   // Send the command to the UART
-  const char *command = "DISCONNECT_WIFI\n";
-  return uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command));
+  const char *command = "WIFI_DEACTIVATE\n";
+  if (uart_terminal_uart_tx(uart, (uint8_t *)command, strlen(command))) {
+    // Wait for the response
+    uint32_t events =
+        furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 2000);
+    if (events & WorkerEvtRxDone) {
+      // Split the response at the newline character
+      char *newline_pos = strchr(uart->last_response, '\n');
+      if (newline_pos) {
+        *newline_pos = '\0'; // Terminate the string at the newline character
+      }
+
+      // print the response
+      FURI_LOG_E("UART", "Response: %s", uart->last_response);
+
+      if (strstr(uart->last_response, "WIFI_DISCONNECT: Wifi disconnected")) {
+        return true;
+      }
+    }
+    FURI_LOG_E("UART", "No response received from the board.");
+    return false;
+  }
+  return false;
 }
 
 bool getCommand(Uart *uart, const char *argument) {
@@ -449,5 +470,26 @@ bool connectCommand(Uart *uart, const char *argument) {
   FURI_LOG_D("UART_CMDS", "WIFI_SSID: <SSID>\nWIFI_PASSWORD: "
                           "<password>\nWIFI_CONNECT: Connecting to WiFi...");
   // Send the command to the UART
-  return uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument));
+  if (uart_terminal_uart_tx(uart, (uint8_t *)argument, strlen(argument))) {
+    // Wait for the response
+    uint32_t events =
+        furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 2000);
+    if (events & WorkerEvtRxDone) {
+      // Split the response at the newline character
+      char *newline_pos = strchr(uart->last_response, '\n');
+      if (newline_pos) {
+        *newline_pos = '\0'; // Terminate the string at the newline character
+      }
+
+      // print the response
+      FURI_LOG_E("UART", "Response: %s", uart->last_response);
+
+      if (strstr(uart->last_response, "WIFI_SUCCESS: WiFi connected")) {
+        return true;
+      }
+    }
+    FURI_LOG_E("UART", "No response received from the board.");
+    return false;
+  }
+  return false;
 }
