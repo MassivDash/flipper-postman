@@ -167,6 +167,10 @@ bool scene_on_event_connect_details(void *context, SceneManagerEvent event) {
   UNUSED(app);
   bool consumed = false;
   switch (event.type) {
+  case SceneManagerEventTypeBack:
+    scene_manager_next_scene(app->scene_manager, MainMenu);
+    consumed = true;
+    break;
   case SceneManagerEventTypeCustom:
     switch (event.event) {
     case AppView_Connect_Details:

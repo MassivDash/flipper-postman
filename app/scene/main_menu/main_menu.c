@@ -63,6 +63,11 @@ bool scene_on_event_main_menu(void *context, SceneManagerEvent event) {
   App *app = context;
   bool consumed = false;
   switch (event.type) {
+  case (SceneManagerEventTypeBack):
+    scene_manager_stop(app->scene_manager);
+    view_dispatcher_stop(app->view_dispatcher);
+    consumed = true;
+    break;
   case SceneManagerEventTypeCustom:
     switch (event.event) {
     case AppEvent_SetupDialog:
@@ -79,11 +84,10 @@ bool scene_on_event_main_menu(void *context, SceneManagerEvent event) {
       break;
     }
     break;
-
   default: // eg. SceneManagerEventTypeBack, SceneManagerEventTypeTick
     consumed = false;
-    break;
   }
+
   return consumed;
 }
 
