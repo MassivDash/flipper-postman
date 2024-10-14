@@ -28,7 +28,7 @@ bool init_csv(App *app) {
   if (storage_file_exists(storage, APP_DATA_PATH("wifi.csv"))) {
     FURI_LOG_I(TAG, "CSV file exists, reading WiFi credentials from file");
 
-    if (!read_wifi_from_csv(app)) {
+    if (!sync_csv_to_mem(app)) {
       FURI_LOG_E(TAG, "Failed to read WiFi credentials from CSV file");
       storage_file_close(app->file);
       return false;
@@ -44,9 +44,35 @@ bool init_csv(App *app) {
     storage_file_close(app->file);
   }
 
-  // Initialize the credentials array
-  memset(app->csv_networks, 0, sizeof(app->csv_networks));
+  return true;
+}
 
+bool sync_csv_to_mem(App *app) {
+  FuriString *buffer = furi_string_alloc();
+  if (!storage_file_open(app->file, APP_DATA_PATH("wifi.csv"), FSAM_READ,
+                         FSOM_OPEN_EXISTING)) {
+    FURI_LOG_E(TAG, "Failed to open file");
+    furi_string_free(buffer);
+    return false;
+  }
+
+  size_t credential_index = 0;
+  while (read_line_from_file(app, buffer) &&
+         credential_index < MAX_WIFI_CREDENTIALS) {
+    WifiCredential wifi = {0};
+    const char *buffer_str = furi_string_get_cstr(buffer);
+    sscanf(buffer_str, "%31[^,],%63[^,],%d", wifi.ssid, wifi.password,
+           (int *)&wifi.is_default);
+    app->csv_networks[credential_index++] = wifi;
+  }
+
+  // Clear remaining entries in the array
+  for (size_t i = credential_index; i < MAX_WIFI_CREDENTIALS; i++) {
+    memset(&app->csv_networks[i], 0, sizeof(WifiCredential));
+  }
+
+  furi_string_free(buffer);
+  storage_file_close(app->file);
   return true;
 }
 
@@ -74,7 +100,7 @@ bool write_wifi_to_csv(App *app, const WifiCredential *wifi) {
   return true;
 }
 
-static bool read_line_from_file(App *app, FuriString *str_result) {
+bool read_line_from_file(App *app, FuriString *str_result) {
   furi_string_reset(str_result);
   uint8_t buffer[1];
   bool result = false;
