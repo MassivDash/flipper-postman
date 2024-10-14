@@ -87,9 +87,9 @@ void submenu_callback_save_to_csv(void *context, uint32_t index) {
   scene_on_enter_connect_details(context);
 }
 
-void submenu_callbac_forget_network(void *context, uint32_t index) {
+void submenu_callback_forget_network(void *context, uint32_t index) {
   UNUSED(index);
-  FURI_LOG_T(TAG, "submenu_callbac_forget_network");
+  FURI_LOG_T(TAG, "submenu_callback_forget_network");
   App *app = context;
 
   if (!delete_wifi_from_csv(app, app->wifi_list.selected_ssid)) {
@@ -100,6 +100,13 @@ void submenu_callbac_forget_network(void *context, uint32_t index) {
 
   // refresh the menu
   scene_on_enter_connect_details(context);
+}
+
+void submenu_callback_exit(void *context, uint32_t index) {
+  UNUSED(index);
+  FURI_LOG_T(TAG, "submenu_callback_exit");
+  App *app = context;
+  scene_manager_next_scene(app->scene_manager, MainMenu);
 }
 
 void scene_on_enter_connect_details(void *context) {
@@ -139,7 +146,7 @@ void scene_on_enter_connect_details(void *context) {
                      submenu_callback_set_password, app);
 
     submenu_add_item(app->submenu_wifi, "Forget network", Details_Forget,
-                     submenu_callback_save_to_csv, app);
+                     submenu_callback_forget_network, app);
   } else {
     submenu_add_item(app->submenu_wifi, "Set Password", Details_SetPassword,
                      submenu_callback_set_password, app);
@@ -147,6 +154,9 @@ void scene_on_enter_connect_details(void *context) {
     submenu_add_item(app->submenu_wifi, "Save to flipper", Details_SaveToCsv,
                      submenu_callback_save_to_csv, app);
   }
+
+  submenu_add_item(app->submenu_wifi, "Exit to main menu", Details_Exit,
+                   submenu_callback_exit, app);
 
   view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect_Details);
 }

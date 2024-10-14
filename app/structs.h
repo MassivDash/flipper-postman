@@ -59,6 +59,7 @@ typedef enum {
   MenuSelection_Download,
   MenuSelection_Listen,
   MenuSelection_About,
+  MenuSelection_Exit,
 } AppMenuSelection;
 
 /** Submenu for get view */
@@ -119,7 +120,8 @@ typedef enum {
   Details_SetPassword,
   Details_SaveToCsv,
   Details_MarkAsDefault,
-  Details_Forget
+  Details_Forget,
+  Details_Exit
 } Connect_DetailsActionMenu;
 
 #endif // STRUCTS_H

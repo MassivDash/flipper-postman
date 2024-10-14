@@ -18,6 +18,10 @@ void menu_callback_main_menu(void *context, uint32_t index) {
   case MenuSelection_Get:
     scene_manager_handle_custom_event(app->scene_manager, AppEvent_MainMenu);
     break;
+  case MenuSelection_Exit:
+    scene_manager_stop(app->scene_manager);
+    view_dispatcher_stop(app->view_dispatcher);
+    break;
   }
 }
 
@@ -46,6 +50,8 @@ void scene_on_enter_main_menu(void *context) {
   }
 
   menu_add_item(app->menu, "About", &A_About_14, MenuSelection_About,
+                menu_callback_main_menu, app);
+  menu_add_item(app->menu, "Exit", &A_Exit_14, MenuSelection_Exit,
                 menu_callback_main_menu, app);
 
   view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Menu);

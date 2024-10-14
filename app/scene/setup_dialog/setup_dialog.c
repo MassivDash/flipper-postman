@@ -143,7 +143,6 @@ bool scene_on_event_setup_dialog(void *context, SceneManagerEvent event) {
       consumed = true;
       break;
     case DialogExResultLeft:
-      // Stop and free the timer
       scene_manager_stop(app->scene_manager);
       view_dispatcher_stop(app->view_dispatcher);
       consumed = true;
