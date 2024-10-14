@@ -29,21 +29,24 @@ typedef enum {
 typedef struct {
   SceneManager *scene_manager;
   ViewDispatcher *view_dispatcher;
-  Menu *menu;
-  Submenu *submenu;
-  Submenu *submenu_wifi;
-  DialogEx *dialog;
+  Menu *menu;            // Main menu
+  Submenu *submenu;      // Wifi overall list
+  Submenu *submenu_wifi; // Selected wifi submenu
   FuriTimer *timer;
-  Uart *uart;
-  SetupDialogState dialog_state;
-  uint8_t uart_ch;
-  UartStatus status;
-  AvailableWifiList wifi_list;
-  File *file;
-  char text_input_store[UART_TERMINAL_TEXT_INPUT_STORE_SIZE + 1];
-  UART_TextInput *text_input;
-  bool is_custom_tx_string;
-  const char *selected_tx_string;
+  DialogEx *dialog;              // Setup dialog
+  SetupDialogState dialog_state; // State for setup dialog
+  Uart *uart;                    // Uart communications
+  uint8_t uart_ch;               // Uart channel (USART1)
+  UartStatus status;             // Uart status
+  AvailableWifiList wifi_list;   // Wifi struct for operating on wifis
+  UART_TextInput *text_input;    // Custom text input for passwords and urls
+  char text_input_store[UART_TERMINAL_TEXT_INPUT_STORE_SIZE +
+                        1];       // Store for text input
+  bool is_custom_tx_string;       // Flag for custom text input
+  const char *selected_tx_string; // Selected text input string
+  File *file;                     // CSV file for storing wifi credentials
+  WifiCredential
+      csv_networks[MAX_WIFI_NETWORKS]; // List of wifi networks from csv
 } App;
 
 #endif // APP_H

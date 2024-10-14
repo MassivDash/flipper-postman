@@ -1,15 +1,54 @@
+#include "./csv.h"
 #include "../app.h"
+#include "../structs.h"
 #include <furi.h>
 #include <stdlib.h>
 #include <storage/storage.h>
 
 #define TAG "wifi_app"
 
-typedef struct {
-  char ssid[32];
-  char password[64];
-  bool is_default;
-} WifiCredential;
+bool init_csv(App *app) {
+  if (!app) {
+    FURI_LOG_E(TAG, "App is NULL");
+    return false;
+  }
+
+  // Open storage
+  Storage *storage = furi_record_open(RECORD_STORAGE);
+
+  // Allocate file
+  app->file = storage_file_alloc(storage);
+
+  if (!app->file) {
+    FURI_LOG_E(TAG, "Failed to allocate storage file");
+    return false;
+  }
+
+  // Check if the file exists
+  if (storage_file_exists(storage, APP_DATA_PATH("wifi.csv"))) {
+    FURI_LOG_I(TAG, "CSV file exists, reading WiFi credentials from file");
+
+    if (!read_wifi_from_csv(app)) {
+      FURI_LOG_E(TAG, "Failed to read WiFi credentials from CSV file");
+      storage_file_close(app->file);
+      return false;
+    }
+  } else {
+    FURI_LOG_W(TAG, "CSV file does not exist, creating a new one.");
+    if (!storage_file_open(app->file, APP_DATA_PATH("wifi.csv"), FSAM_WRITE,
+                           FSOM_CREATE_ALWAYS)) {
+      FURI_LOG_E(TAG, "Failed to create CSV file");
+      storage_file_close(app->file);
+      return false;
+    }
+    storage_file_close(app->file);
+  }
+
+  // Initialize the credentials array
+  memset(app->csv_networks, 0, sizeof(app->csv_networks));
+
+  return true;
+}
 
 bool write_wifi_to_csv(App *app, const WifiCredential *wifi) {
   if (!storage_file_open(app->file, APP_DATA_PATH("wifi.csv"), FSAM_WRITE,
@@ -65,12 +104,14 @@ bool read_wifi_from_csv(App *app) {
     return false;
   }
 
-  while (read_line_from_file(app, buffer)) {
+  size_t credential_index = 0;
+  while (read_line_from_file(app, buffer) &&
+         credential_index < MAX_WIFI_CREDENTIALS) {
     WifiCredential wifi = {0};
     const char *buffer_str = furi_string_get_cstr(buffer);
     sscanf(buffer_str, "%31[^,],%63[^,],%d", wifi.ssid, wifi.password,
            (int *)&wifi.is_default);
-    // Process wifi credentials as needed
+    app->csv_networks[credential_index++] = wifi;
   }
 
   furi_string_free(buffer);

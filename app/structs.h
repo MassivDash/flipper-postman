@@ -2,6 +2,8 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+#include <furi.h>
+
 typedef enum {
   SetUpDialog,
   MainMenu,
@@ -92,10 +94,17 @@ typedef struct {
 #define CONNECT_CMD_BUFFER_SIZE                                                \
   (16 + MAX_SSID_LENGTH + 1 + MAX_PASSWORD_LENGTH +                            \
    1) // "WIFI_CONNECT: " + ssid + " " + password + null terminator
+#define MAX_WIFI_CREDENTIALS 10 // Define the maximum number of WiFi credentials
 
 typedef struct {
   char ssid[MAX_SSID_LENGTH];
 } WifiNetwork;
+
+typedef struct {
+  char ssid[32];
+  char password[64];
+  bool is_default;
+} WifiCredential;
 
 typedef struct {
   WifiNetwork networks[MAX_WIFI_NETWORKS];

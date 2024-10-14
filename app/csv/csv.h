@@ -2,13 +2,11 @@
 #define CSV_H
 
 #include "../app.h"
+#include "../structs.h"
+#include <furi.h>
+#include <storage/storage.h>
 
-typedef struct {
-  char ssid[32];
-  char password[64];
-  bool is_default;
-} WifiCredential;
-
+bool init_csv(App *app);
 bool write_wifi_to_csv(App *app, const WifiCredential *wifi);
 bool read_wifi_from_csv(App *app);
 bool find_and_replace_wifi_in_csv(App *app, const WifiCredential *current_wifi);
