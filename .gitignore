@@ -1,9 +1,8 @@
-dist
-.clang-format
-.editorconfig
-.DS_Store
-.python
-python
-**/.cache/
-python
+dist/*
 .vscode
+.clang-format
+.clangd
+.editorconfig
+.env
+.ufbt
+.python

@@ -1,48 +1,29 @@
+// This file is autogeneated by the ufbt.
+// You can modify it, and it will not be overwritten if exists.
+// Some paths are absolute, and will need to be updated if you move the project.
+// To regenerate the file, delete it and run `ufbt vscode_dist` again.
 {
-  "workbench.tree.indent": 12,
-  "cortex-debug.enableTelemetry": false,
-  "cortex-debug.variableUseNaturalFormat": true,
-  "cortex-debug.armToolchainPath": "~/Git/flipperzero-firmware/toolchain/current/bin",
-  "cortex-debug.openocdPath": "~/Git/flipperzero-firmware/toolchain/current/bin/openocd",
-  "cortex-debug.gdbPath": "~/Git/flipperzero-firmware/toolchain/current/bin/arm-none-eabi-gdb-py3",
-  "editor.formatOnSave": true,
-  "files.associations": {
-    "*.scons": "python",
-    "SConscript": "python",
-    "SConstruct": "python",
-    "*.fam": "python",
-    "gui.h": "c",
-    "dolphin.h": "c",
-    "stdlib.h": "c",
-    "input.h": "c"
-  },
-  "clangd.path": "~/Git/flipperzero-firmware/toolchain/current/bin/clangd",
-  "clangd.arguments": [
-    "--query-driver=**/arm-none-eabi-*",
-    "--compile-commands-dir=${workspaceFolder}/.vscode/clang_compile_commands/",
-    "--clang-tidy",
-    "--header-insertion=never"
-  ],
-  "clangd.onConfigChanged": "restart",
-  "clangd.inactiveRegions.useBackgroundHighlight": true,
-  "workbench.colorCustomizations": {
-    "activityBar.activeBackground": "#93e6fc",
-    "activityBar.background": "#93e6fc",
-    "activityBar.foreground": "#15202b",
-    "activityBar.inactiveForeground": "#15202b99",
-    "activityBarBadge.background": "#fa45d4",
-    "activityBarBadge.foreground": "#15202b",
-    "commandCenter.border": "#15202b99",
-    "sash.hoverBorder": "#93e6fc",
-    "statusBar.background": "#61dafb",
-    "statusBar.foreground": "#15202b",
-    "statusBarItem.hoverBackground": "#2fcefa",
-    "statusBarItem.remoteBackground": "#61dafb",
-    "statusBarItem.remoteForeground": "#15202b",
-    "titleBar.activeBackground": "#61dafb",
-    "titleBar.activeForeground": "#15202b",
-    "titleBar.inactiveBackground": "#61dafb99",
-    "titleBar.inactiveForeground": "#15202b99"
-  },
-  "peacock.color": "#61dafb"
+    "cortex-debug.enableTelemetry": false,
+    "cortex-debug.variableUseNaturalFormat": false,
+    "cortex-debug.armToolchainPath": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin",
+    "cortex-debug.openocdPath": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin/openocd",
+    "cortex-debug.gdbPath": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin/arm-none-eabi-gdb-py3",
+    "editor.formatOnSave": true,
+    "files.associations": {
+        "*.scons": "python",
+        "SConscript": "python",
+        "SConstruct": "python",
+        "*.fam": "python"
+    },
+    "python.analysis.typeCheckingMode": "off",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "clangd.path": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin/clangd",
+    "clangd.arguments": [
+        "--query-driver=**/arm-none-eabi-*",
+        "--compile-commands-dir=${workspaceFolder}/.vscode",
+        "--clang-tidy",
+        "--header-insertion=never"
+    ]
 }
