@@ -1,3 +1,4 @@
 #!/bin/bash
 
-pipx run ufbt launch
+source .python/bin/activate
+ufbt launch

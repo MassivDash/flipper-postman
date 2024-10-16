@@ -2,4 +2,8 @@ dist
 .clang-format
 .editorconfig
 .DS_Store
+.python
+python
 **/.cache/
+python
+.vscode
