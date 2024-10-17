@@ -10,17 +10,13 @@
 static void get_scene_select_callback(void* context, uint32_t index) {
     App* app = context;
     furi_assert(app);
-    furi_assert(index);
+    furi_assert(app->view_dispatcher);
+    view_dispatcher_send_custom_event(app->view_dispatcher, index);
 }
 
 static void get_scene_set_url_callback(VariableItem* item) {
     App* app = variable_item_get_context(item);
     furi_assert(app);
-    // Logic to set URL
-    app->selected_tx_string = app->get_state->url;
-    app->text_input_state = TextInputState_GetUrl;
-
-    scene_manager_next_scene(app->scene_manager, Connect_Ssid_Password);
 }
 
 static void get_scene_mode_callback(VariableItem* item) {
@@ -104,7 +100,9 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
         consumed = true;
         switch(event.event) {
         case GetItemSetUrl:
-            // Logic to handle setting the URL
+            app->selected_tx_string = app->get_state->url;
+            app->text_input_state = TextInputState_GetUrl;
+            scene_manager_next_scene(app->scene_manager, Text_Input);
             break;
         case GetItemToggleViewSave:
             // Logic to handle mode change
@@ -113,7 +111,7 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             // Logic to handle action
             break;
         default:
-            furi_crash("Unknown key type");
+
             break;
         }
     }

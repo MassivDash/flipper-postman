@@ -21,7 +21,7 @@ void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Menu);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Details);
-    view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Ssid_Password);
+    view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Text_Input);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Favs);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Get);
     view_dispatcher_free(app->view_dispatcher);

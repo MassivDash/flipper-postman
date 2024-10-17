@@ -77,7 +77,7 @@ void scene_on_enter_text_input(void* context) {
         UART_TERMINAL_TEXT_INPUT_STORE_SIZE,
         false);
 
-    view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect_Ssid_Password);
+    view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect_Text_Input);
 }
 
 bool scene_on_event_text_input(void* context, SceneManagerEvent event) {

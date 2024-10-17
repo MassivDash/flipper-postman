@@ -13,7 +13,7 @@
 
 #include "./get/get.h"
 
-#define TAG "connect_ssid_password"
+#define TAG "Text_Input"
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
 void (*const scene_on_enter_handlers[])(void*) = {
@@ -130,7 +130,7 @@ void view_dispatcher_init(App* app) {
 
     view_dispatcher_add_view(
         app->view_dispatcher,
-        AppView_Connect_Ssid_Password,
+        AppView_Connect_Text_Input,
         uart_text_input_get_view(app->text_input));
 
     view_dispatcher_add_view(

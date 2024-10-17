@@ -129,7 +129,7 @@ void submenu_callback_set_password(void* context, uint32_t index) {
     }
 
     app->text_input_state = TextInputState_WifiPassword;
-    scene_manager_next_scene(app->scene_manager, Connect_Ssid_Password);
+    scene_manager_next_scene(app->scene_manager, Text_Input);
 }
 
 void submenu_callback_save_to_csv(void* context, uint32_t index) {
