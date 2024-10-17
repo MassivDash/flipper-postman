@@ -45,7 +45,8 @@ void submenu_callback_disconnect_connect(void* context, uint32_t index) {
     // 3 cases, board is active and connected to the selected ssid
     bool active = check_if_current_view_is_active(app);
     bool is_connected_not_selected =
-        strcmp(app->wifi_list.selected_ssid, app->wifi_list.connected_ssid) != 0;
+        strcmp(app->wifi_list.selected_ssid, app->wifi_list.connected_ssid) != 0 &&
+        app->status == BOARD_CONNECTED_WIFI_ON;
     bool is_not_active = app->status == BOARD_CONNECTED_WIFI_OFF;
     // board is not active
 
@@ -58,6 +59,7 @@ void submenu_callback_disconnect_connect(void* context, uint32_t index) {
     if(active) {
         // Disconnect logic here
         FURI_LOG_I(TAG, "Disconnecting from WiFi");
+        submenu_change_item_label(app->submenu_wifi, 0, "Disconnecting ...");
         if(disconnectWiFiCommand(app->uart, NULL)) {
             app->status = BOARD_CONNECTED_WIFI_OFF;
             app->wifi_list.connected_ssid[0] = '\0';
@@ -70,7 +72,7 @@ void submenu_callback_disconnect_connect(void* context, uint32_t index) {
     if(is_not_active) {
         // Connect logic here
         FURI_LOG_I(TAG, "Connecting to WiFi");
-
+        submenu_change_item_label(app->submenu_wifi, 0, "Connecting ...");
         // Creating the string for connect cmd, WIFI_CONNECT: <ssid> <password>
         char connect_cmd[CONNECT_CMD_BUFFER_SIZE];
 
