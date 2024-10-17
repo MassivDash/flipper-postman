@@ -17,8 +17,10 @@ static void get_scene_set_url_callback(VariableItem* item) {
     App* app = variable_item_get_context(item);
     furi_assert(app);
     // Logic to set URL
-    // For example, open a text input dialog to set the URL
-    // Assuming the URL is set in app->get_state->url
+    app->selected_tx_string = app->get_state->url;
+    app->text_input_state = TextInputState_GetUrl;
+
+    scene_manager_next_scene(app->scene_manager, Connect_Ssid_Password);
 }
 
 static void get_scene_mode_callback(VariableItem* item) {
@@ -45,6 +47,12 @@ void draw_get_menu(App* app) {
     VariableItemList* variable_item_list = app->variable_item_list;
 
     variable_item_list_reset(variable_item_list);
+
+    if(!app->get_state) {
+        app->get_state = malloc(sizeof(GetState));
+        app->get_state->mode = false; // Default mode: Display
+        strcpy(app->get_state->url, ""); // Default URL: empty
+    }
 
     // Add items to the variable item list and set their values
     VariableItem* item;

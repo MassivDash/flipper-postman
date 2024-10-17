@@ -46,11 +46,13 @@ void scene_on_enter_connect(void* context) {
 
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "Available WiFi's");
+    submenu_add_item(app->submenu, "Scanning ...", 0, NULL, NULL);
+    view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect);
+    // reset the wifi selected and ssid
+    app->wifi_list.selected_ssid[0] = '\0';
+    app->wifi_list.password_ssid[0] = '\0';
 
     // Add a dummy menu item indicating that the search is in progress
-    submenu_add_item(app->submenu, "Scanning ...", 0, NULL, NULL);
-
-    view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect);
 
     // Run the listWiFiCommand to get the available WiFi networks
     if(!listWiFiCommand(app->uart, NULL)) {
@@ -61,7 +63,7 @@ void scene_on_enter_connect(void* context) {
         return;
     }
 
-    submenu_change_item_label(app->submenu, 0, "");
+    submenu_change_item_label(app->submenu, 0, "parsing list ...");
 
     // Clear the submenu and add the actual WiFi networks
     if(app->wifi_list.networks[0].ssid[0] != '\0') {

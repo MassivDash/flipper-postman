@@ -8,7 +8,7 @@
 #include "./connect/connect.h"
 #include "./connect_favs/connect_favs.h"
 #include "./connect_details/connect_details.h"
-#include "./connect_ssid_password/connect_ssid_password.h"
+#include "./text_input/text_input.h"
 #include "./setup_dialog/setup_dialog.h"
 
 #include "./get/get.h"
@@ -21,7 +21,7 @@ void (*const scene_on_enter_handlers[])(void*) = {
     scene_on_enter_main_menu,
     scene_on_enter_connect,
     scene_on_enter_connect_details,
-    scene_on_enter_connect_ssid_password,
+    scene_on_enter_text_input,
     scene_on_enter_connect_favs,
     scene_on_enter_get};
 
@@ -32,7 +32,7 @@ bool (*const scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     scene_on_event_main_menu,
     scene_on_event_connect,
     scene_on_event_connect_details,
-    scene_on_event_connect_ssid_password,
+    scene_on_event_text_input,
     scene_on_event_connect_favs,
     scene_on_event_get};
 
@@ -43,7 +43,7 @@ void (*const scene_on_exit_handlers[])(void*) = {
     scene_on_exit_main_menu,
     scene_on_exit_connect,
     scene_on_exit_connect_details,
-    scene_on_exit_connect_ssid_password,
+    scene_on_exit_text_input,
     scene_on_exit_connect_favs,
     scene_on_exit_get};
 

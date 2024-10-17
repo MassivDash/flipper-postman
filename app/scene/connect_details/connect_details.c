@@ -19,13 +19,17 @@ bool check_if_current_view_is_active(App* app) {
     return board_on && connected_to_the_view;
 }
 
-bool check_if_wifi_has_password(App* app) {
+bool check_if_wifi_has_csv_password(App* app) {
     for(size_t i = 0; i < MAX_WIFI_CREDENTIALS; i++) {
         if(strcmp(app->csv_networks[i].ssid, app->wifi_list.selected_ssid) == 0) {
             return app->csv_networks[i].password[0] != '\0';
         }
     }
     return false;
+}
+
+bool check_if_password_set(App* app) {
+    return app->wifi_list.password_ssid[0] != '\0';
 }
 
 char get_wifi_csv_password(App* app) {
@@ -115,7 +119,7 @@ void submenu_callback_set_password(void* context, uint32_t index) {
 
     //Copy over the the password to text_intput_store
 
-    if(check_if_wifi_has_password(app)) {
+    if(check_if_wifi_has_csv_password(app)) {
         strncpy(
             app->text_input_store,
             app->wifi_list.password_ssid,
@@ -123,8 +127,8 @@ void submenu_callback_set_password(void* context, uint32_t index) {
         app->text_input_store[sizeof(app->text_input_store) - 1] = '\0';
         app->is_custom_tx_string = true; // Ensure null-termination
     }
-    // Set the custom string to true
 
+    app->text_input_state = TextInputState_WifiPassword;
     scene_manager_next_scene(app->scene_manager, Connect_Ssid_Password);
 }
 
@@ -185,7 +189,13 @@ void scene_on_enter_connect_details(void* context) {
     }
 
     submenu_set_header(app->submenu_wifi, header);
-    bool wifi_found = check_if_wifi_has_password(app);
+    bool wifi_csv_found = check_if_wifi_has_csv_password(app);
+    bool password_set = check_if_password_set(app);
+    //Load password from csv
+    char password = get_wifi_csv_password(app);
+    if(password != '\0') {
+        strncpy(app->wifi_list.password_ssid, &password, 1);
+    }
 
     if(active) {
         submenu_add_item(
@@ -203,7 +213,7 @@ void scene_on_enter_connect_details(void* context) {
             app);
     }
 
-    if(wifi_found) {
+    if(wifi_csv_found) {
         submenu_add_item(
             app->submenu_wifi,
             "Edit Password",
@@ -220,23 +230,18 @@ void scene_on_enter_connect_details(void* context) {
     } else {
         submenu_add_item(
             app->submenu_wifi,
-            "Set Password",
+            !password_set ? "Set Password" : "Edit Password",
             Details_SetPassword,
             submenu_callback_set_password,
             app);
 
-        submenu_add_item(
-            app->submenu_wifi,
-            "Save to flipper",
-            Details_SaveToCsv,
-            submenu_callback_save_to_csv,
-            app);
-
-        //Load password from csv
-        char password = get_wifi_csv_password(app);
-        if(password != '\0') {
-            strncpy(app->wifi_list.password_ssid, &password, 1);
-        }
+        password_set ? submenu_add_item(
+                           app->submenu_wifi,
+                           "Save to flipper",
+                           Details_SaveToCsv,
+                           submenu_callback_save_to_csv,
+                           app) :
+                       NULL;
     }
 
     submenu_add_item(

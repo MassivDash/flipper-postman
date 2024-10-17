@@ -33,6 +33,8 @@ void menu_callback_main_menu(void* context, uint32_t index) {
 void scene_on_enter_main_menu(void* context) {
     FURI_LOG_T(TAG, "scene_on_enter_main_menu");
     App* app = context;
+
+    // Reset the menu and some submenus
     menu_reset(app->menu);
 
     if(app->status == BOARD_CONNECTED_WIFI_ON && app->wifi_list.connected_ssid[0] != '\0') {

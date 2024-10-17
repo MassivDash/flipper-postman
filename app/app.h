@@ -44,6 +44,7 @@ typedef struct {
     char text_input_store[UART_TERMINAL_TEXT_INPUT_STORE_SIZE + 1]; // Store for text input
     bool is_custom_tx_string; // Flag for custom text input
     const char* selected_tx_string; // Selected text input string
+    TextInputState text_input_state; // Current text input state
     File* file; // CSV file for storing wifi credentials
     WifiCredential csv_networks[MAX_WIFI_NETWORKS]; // List of wifi networks from csv
     VariableItemList* variable_item_list; // Variable item list for get view

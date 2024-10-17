@@ -41,7 +41,7 @@ typedef enum {
     AppEvent_MainMenu,
     AppEvent_Connect,
     AppEvent_Connect_Details,
-    AppEvent_Connect_Ssid_Password,
+    AppEvent_Input_Text,
     AppEvent_Connect_Favs,
     AppEvent_Get,
     // AppEvent_Post,
@@ -129,6 +129,15 @@ typedef enum {
 } Connect_DetailsActionMenu;
 
 #define TEXT_STORE_SIZE 40
+
+typedef enum {
+    TextInputState_GetUrl,
+    TextInputState_WifiPassword,
+    TextInputState_PostUrl,
+    TextInputState_Filename,
+    TextInputState_Payload,
+    TextInputState_Message,
+} TextInputState;
 
 typedef struct {
     bool mode; // Mode: Display or Save
