@@ -478,7 +478,7 @@ bool connectCommand(Uart* uart, const char* argument) {
     // Send the command to the UART
     if(uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument))) {
         // Wait for the response
-        uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 2000);
+        uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 5000);
         if(events & WorkerEvtRxDone) {
             // Split the response at the newline character
             char* newline_pos = strchr(uart->last_response, '\n');

@@ -9,6 +9,16 @@
 
 #define TAG "connect_details_app"
 
+bool check_if_current_view_is_active(App* app) {
+    // Check if board is On
+    bool board_on = app->status == BOARD_CONNECTED_WIFI_ON;
+    // Check if the selected ssid is the connected ssid
+    bool connected_to_the_view =
+        strcmp(app->wifi_list.selected_ssid, app->wifi_list.connected_ssid) == 0;
+
+    return board_on && connected_to_the_view;
+}
+
 bool check_if_wifi_has_password(App* app) {
     for(size_t i = 0; i < MAX_WIFI_CREDENTIALS; i++) {
         if(strcmp(app->csv_networks[i].ssid, app->wifi_list.selected_ssid) == 0) {
@@ -32,7 +42,20 @@ void submenu_callback_disconnect_connect(void* context, uint32_t index) {
     FURI_LOG_T(TAG, "submenu_callback_disconnect_connect");
     App* app = context;
 
-    if(app->status == BOARD_CONNECTED_WIFI_ON) {
+    // 3 cases, board is active and connected to the selected ssid
+    bool active = check_if_current_view_is_active(app);
+    bool is_connected_not_selected =
+        strcmp(app->wifi_list.selected_ssid, app->wifi_list.connected_ssid) != 0;
+    bool is_not_active = app->status == BOARD_CONNECTED_WIFI_OFF;
+    // board is not active
+
+    if(is_connected_not_selected) {
+        // Set the selected ssid to the connected ssid
+        active = true;
+        is_not_active = true;
+    }
+
+    if(active) {
         // Disconnect logic here
         FURI_LOG_I(TAG, "Disconnecting from WiFi");
         if(disconnectWiFiCommand(app->uart, NULL)) {
@@ -42,7 +65,9 @@ void submenu_callback_disconnect_connect(void* context, uint32_t index) {
         } else {
             FURI_LOG_E(TAG, "Failed to disconnect from WiFi");
         }
-    } else {
+    }
+
+    if(is_not_active) {
         // Connect logic here
         FURI_LOG_I(TAG, "Connecting to WiFi");
 
@@ -141,16 +166,6 @@ void submenu_callback_exit(void* context, uint32_t index) {
     FURI_LOG_T(TAG, "submenu_callback_exit");
     App* app = context;
     scene_manager_next_scene(app->scene_manager, MainMenu);
-}
-
-bool check_if_current_view_is_active(App* app) {
-    // Check if board is On
-    bool board_on = app->status == BOARD_CONNECTED_WIFI_ON;
-    // Check if the selected ssid is the connected ssid
-    bool connected_to_the_view =
-        strcmp(app->wifi_list.selected_ssid, app->wifi_list.connected_ssid) == 0;
-
-    return board_on && connected_to_the_view;
 }
 
 void scene_on_enter_connect_details(void* context) {
