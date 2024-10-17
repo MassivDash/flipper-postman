@@ -46,6 +46,7 @@ typedef struct {
     const char* selected_tx_string; // Selected text input string
     File* file; // CSV file for storing wifi credentials
     WifiCredential csv_networks[MAX_WIFI_NETWORKS]; // List of wifi networks from csv
+    VariableItemList* variable_item_list; // Variable item list for get view
 } App;
 
 #endif // APP_H

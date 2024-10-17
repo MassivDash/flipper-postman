@@ -16,7 +16,7 @@ void menu_callback_main_menu(void* context, uint32_t index) {
         scene_manager_handle_custom_event(app->scene_manager, AppEvent_Connect);
         break;
     case MenuSelection_Get:
-        scene_manager_handle_custom_event(app->scene_manager, AppEvent_MainMenu);
+        scene_manager_handle_custom_event(app->scene_manager, AppEvent_Get);
         break;
     case MenuSelection_Exit:
         scene_manager_stop(app->scene_manager);
@@ -137,6 +137,10 @@ bool scene_on_event_main_menu(void* context, SceneManagerEvent event) {
             break;
         case AppEvent_Connect_Favs:
             scene_manager_next_scene(app->scene_manager, Connect_Favs);
+            consumed = true;
+            break;
+        case AppEvent_Get:
+            scene_manager_next_scene(app->scene_manager, Get);
             consumed = true;
             break;
         }

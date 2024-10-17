@@ -23,11 +23,13 @@ void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Details);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Ssid_Password);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Favs);
+    view_dispatcher_remove_view(app->view_dispatcher, AppView_Get);
     view_dispatcher_free(app->view_dispatcher);
     menu_free(app->menu);
     submenu_free(app->submenu);
     submenu_free(app->submenu_favs);
     submenu_free(app->submenu_wifi);
+    variable_item_list_free(app->variable_item_list);
     dialog_ex_free(app->dialog);
     uart_text_input_free(app->text_input);
     furi_timer_free(app->timer);

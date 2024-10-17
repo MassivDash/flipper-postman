@@ -11,6 +11,8 @@
 #include "./connect_ssid_password/connect_ssid_password.h"
 #include "./setup_dialog/setup_dialog.h"
 
+#include "./get/get.h"
+
 #define TAG "connect_ssid_password"
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
@@ -20,7 +22,8 @@ void (*const scene_on_enter_handlers[])(void*) = {
     scene_on_enter_connect,
     scene_on_enter_connect_details,
     scene_on_enter_connect_ssid_password,
-    scene_on_enter_connect_favs};
+    scene_on_enter_connect_favs,
+    scene_on_enter_get};
 
 /** collection of all scene on event handlers - in the same order as their enum
  */
@@ -30,7 +33,8 @@ bool (*const scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     scene_on_event_connect,
     scene_on_event_connect_details,
     scene_on_event_connect_ssid_password,
-    scene_on_event_connect_favs};
+    scene_on_event_connect_favs,
+    scene_on_event_get};
 
 /** collection of all scene on exit handlers - in the same order as their enum
  */
@@ -40,7 +44,8 @@ void (*const scene_on_exit_handlers[])(void*) = {
     scene_on_exit_connect,
     scene_on_exit_connect_details,
     scene_on_exit_connect_ssid_password,
-    scene_on_exit_connect_favs};
+    scene_on_exit_connect_favs,
+    scene_on_exit_get};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {
@@ -97,6 +102,9 @@ void view_dispatcher_init(App* app) {
     app->is_custom_tx_string = false;
     app->selected_tx_string = "";
 
+    // Get / Post view
+    app->variable_item_list = variable_item_list_alloc();
+
     // assign callback that pass events from views to the scene manager
     FURI_LOG_D(TAG, "view_dispatcher_init setting callbacks");
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
@@ -127,4 +135,7 @@ void view_dispatcher_init(App* app) {
 
     view_dispatcher_add_view(
         app->view_dispatcher, AppView_Connect_Favs, submenu_get_view(app->submenu_favs));
+
+    view_dispatcher_add_view(
+        app->view_dispatcher, AppView_Get, variable_item_list_get_view(app->variable_item_list));
 }
