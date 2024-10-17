@@ -10,6 +10,8 @@ void uart_terminal_scene_text_input_callback(void *context) {
 void scene_on_enter_connect_ssid_password(void *context) {
   App *app = context;
 
+  
+
   if (false == app->is_custom_tx_string) {
     // Fill text input with selected string so that user can add to it
     size_t length = strlen(app->selected_tx_string);
