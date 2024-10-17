@@ -67,7 +67,7 @@ static void uart_check_task(App* app) {
                 &I_WifiCheck_128_64,
                 NULL,
                 NULL,
-                50,
+                52,
                 58,
                 AlignLeft,
                 AlignCenter);
