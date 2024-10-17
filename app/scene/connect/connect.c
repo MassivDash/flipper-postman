@@ -61,6 +61,8 @@ void scene_on_enter_connect(void* context) {
         return;
     }
 
+    submenu_change_item_label(app->submenu, 0, "");
+
     // Clear the submenu and add the actual WiFi networks
     if(app->wifi_list.networks[0].ssid[0] != '\0') {
         submenu_reset(app->submenu);

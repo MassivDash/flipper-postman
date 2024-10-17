@@ -128,4 +128,11 @@ typedef enum {
     Details_Exit
 } Connect_DetailsActionMenu;
 
+#define TEXT_STORE_SIZE 40
+
+typedef struct {
+    bool mode; // Mode: Display or Save
+    char url[TEXT_STORE_SIZE]; // URL
+} GetState;
+
 #endif // STRUCTS_H

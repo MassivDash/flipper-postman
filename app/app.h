@@ -47,6 +47,7 @@ typedef struct {
     File* file; // CSV file for storing wifi credentials
     WifiCredential csv_networks[MAX_WIFI_NETWORKS]; // List of wifi networks from csv
     VariableItemList* variable_item_list; // Variable item list for get view
+    GetState* get_state;
 } App;
 
 #endif // APP_H

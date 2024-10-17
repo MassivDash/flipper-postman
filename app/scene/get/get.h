@@ -19,5 +19,6 @@ typedef enum {
 void scene_on_enter_get(void* context);
 bool scene_on_event_get(void* context, SceneManagerEvent event);
 void scene_on_exit_get(void* context);
+void draw_get_menu(App* app);
 
 #endif // GET_H
