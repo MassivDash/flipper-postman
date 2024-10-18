@@ -38,9 +38,12 @@ void uart_terminal_uart_on_irq_cb(
         furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
     }
 }
+
 static int32_t uart_worker(void* context) {
     Uart* uart = (Uart*)context;
+    App* app = uart->app; // Assuming uart->app points to the App structure
     size_t response_len = 0;
+    size_t text_box_len = 0;
 
     while(1) {
         uint32_t events =
@@ -70,12 +73,22 @@ static int32_t uart_worker(void* context) {
                     FURI_LOG_E("UART", "Response buffer overflow.");
                     response_len = 0; // Reset to avoid overflow
                 }
+
+                // Append to text_box_store if full_response is set
+                if(app->full_response) {
+                    if(text_box_len + len < sizeof(app->text_box_store)) {
+                        strncpy(app->text_box_store + text_box_len, (char*)uart->rx_buf, len);
+                        text_box_len += len;
+                        app->text_box_store[text_box_len] = '\0'; // Ensure null-termination
+                    } else {
+                        FURI_LOG_E("UART", "Text box store overflow.");
+                        text_box_len = 0; // Reset to avoid overflow
+                    }
+                }
             }
         }
     }
-
     furi_stream_buffer_free(uart->rx_stream);
-
     return 0;
 }
 
@@ -394,7 +407,7 @@ bool getCommand(Uart* uart, const char* argument) {
 
     // Build the command
     snprintf(command, sizeof(command), "GET %s\n", argument);
-
+    uart->app->full_response = true;
     // Send the command to the UART
     if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
         return false;
@@ -403,10 +416,15 @@ bool getCommand(Uart* uart, const char* argument) {
     // Wait for the response
     uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 6000);
     if(events & WorkerEvtRxDone) {
-        // Copy the response to text_box_store
-        strncpy(uart->app->text_box_store, uart->last_response, DISPLAY_STORE_SIZE);
-        uart->app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
-        return true;
+        if(uart->app->full_response) {
+            // Check if text_box_store is empty or null
+            if(uart->app->text_box_store[0] == '\0') {
+                // Copy the last response to text_box_store
+                strncpy(uart->app->text_box_store, uart->last_response, DISPLAY_STORE_SIZE);
+                uart->app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
+                return true;
+            }
+        }
     }
 
     FURI_LOG_E("UART_CMDS", "Failed to get response.");

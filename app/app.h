@@ -16,7 +16,7 @@
 #include <gui/modules/text_box.h> // Text box for displaying Uart responses
 #include <gui/modules/variable_item_list.h> // Variable item list for GET view
 #include "./modules/uart_text_input/uart_text_input.h" // Custom text input for passwords and urls
-
+#include <gui/modules/widget.h> // As TEXT BOX
 // CSV STORAGE
 #include <storage/storage.h>
 
@@ -48,8 +48,9 @@ typedef struct {
     WifiCredential csv_networks[MAX_WIFI_NETWORKS]; // List of wifi networks from csv
     VariableItemList* variable_item_list; // Variable item list for get view
     GetState* get_state; // Get state for get view
-    TextBox* text_box; // Text box for displaying uart responses
+    Widget* text_box; // Text box for displaying uart responses
     char text_box_store[DISPLAY_STORE_SIZE + 1]; // Store for displaying uart responses
+    bool full_response; // Flag for display active
 } App;
 
 #endif // APP_H

@@ -110,7 +110,7 @@ void view_dispatcher_init(App* app) {
     app->selected_tx_string = "";
 
     //Text box for displaying uart responses
-    app->text_box = text_box_alloc();
+    app->text_box = widget_alloc();
 
     // Get / Post view
     app->variable_item_list = variable_item_list_alloc();
@@ -150,5 +150,5 @@ void view_dispatcher_init(App* app) {
         app->view_dispatcher, AppView_Get, variable_item_list_get_view(app->variable_item_list));
 
     view_dispatcher_add_view(
-        app->view_dispatcher, AppView_Display, text_box_get_view(app->text_box));
+        app->view_dispatcher, AppView_Display, widget_get_view(app->text_box));
 }
