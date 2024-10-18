@@ -102,7 +102,7 @@ void scene_on_exit_display(void* context) {
     FURI_LOG_D(TAG, "scene_on_exit_display");
     widget_reset(app->text_box);
     // Reset the text_box_store
-    app->text_box_store[DISPLAY_STORE_SIZE] = '\0';
+    app->text_box_store[0] = '\0';
     app->display_mode = DISPLAY_NONE;
 }
 bool scene_on_event_display(void* context, SceneManagerEvent event) {

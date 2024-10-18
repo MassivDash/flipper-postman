@@ -42,7 +42,6 @@ static int32_t uart_worker(void* context) {
     Uart* uart = (Uart*)context;
     App* app = uart->app; // Assuming uart->app points to the App structure
     size_t response_len = 0;
-    size_t text_box_len = 0;
 
     while(1) {
         uint32_t events =
@@ -75,13 +74,13 @@ static int32_t uart_worker(void* context) {
 
                 // Append to text_box_store if full_response is set
                 if(app->full_response) {
+                    size_t text_box_len = strlen(app->text_box_store);
                     if(text_box_len + len < sizeof(app->text_box_store)) {
                         strncpy(app->text_box_store + text_box_len, (char*)uart->rx_buf, len);
                         text_box_len += len;
                         app->text_box_store[text_box_len] = '\0'; // Ensure null-termination
                     } else {
                         FURI_LOG_E("UART", "Text box store overflow.");
-                        text_box_len = 0; // Reset to avoid overflow
                     }
                 }
             }
