@@ -38,7 +38,6 @@ void uart_terminal_uart_on_irq_cb(
         furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
     }
 }
-
 static int32_t uart_worker(void* context) {
     Uart* uart = (Uart*)context;
     App* app = uart->app; // Assuming uart->app points to the App structure
@@ -406,7 +405,11 @@ bool getCommand(Uart* uart, const char* argument) {
     char command[256];
 
     // Build the command
-    snprintf(command, sizeof(command), "GET %s\n", argument);
+    if(uart->app->display_mode == DISPLAY_GET) {
+        snprintf(command, sizeof(command), "GET %s\n", argument);
+    } else if(uart->app->display_mode == DISPLAY_GET_STREAM) {
+        snprintf(command, sizeof(command), "GET_STREAM %s\n", argument);
+    }
     uart->app->full_response = true;
     // Send the command to the UART
     if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
@@ -425,19 +428,24 @@ bool getCommand(Uart* uart, const char* argument) {
                 return true;
             }
         }
+    } else {
+        FURI_LOG_E("UART", "No response received from the board.");
+        return false;
     }
 
-    FURI_LOG_E("UART_CMDS", "Failed to get response.");
-    return false;
-}
+    // Check if there is a response other wise input error message to text_box_store
 
-bool getStreamCommand(Uart* uart, const char* argument) {
-    FURI_LOG_D(
-        "UART_CMDS",
-        "GET_STREAM: %s\nSTATUS: <number>\nSTREAM:\n<streamed data>\nSTREAM_END",
-        argument);
-    // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    if(uart->app->text_box_store[0] == '\0') {
+        FURI_LOG_D("POSTMAN", "response error");
+        strncpy(
+            uart->app->text_box_store,
+            "GET_ERROR: Failed to send GET request",
+            DISPLAY_STORE_SIZE);
+        uart->app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
+        return true;
+    }
+
+    return false;
 }
 
 bool postCommand(Uart* uart, const char* argument) {

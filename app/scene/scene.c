@@ -52,7 +52,7 @@ void (*const scene_on_exit_handlers[])(void*) = {
     scene_on_exit_text_input,
     scene_on_exit_connect_favs,
     scene_on_exit_get,
-    scene_on_enter_display};
+    scene_on_exit_display};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {

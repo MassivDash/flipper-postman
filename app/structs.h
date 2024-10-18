@@ -154,6 +154,17 @@ typedef enum {
     TextInputState_Message,
 } TextInputState;
 
+typedef enum {
+    DISPLAY_GET,
+    DISPLAY_GET_STREAM,
+    DISPLAY_POST,
+    DISPLAY_BUILD_HTTP,
+    DISPLAY_DOWNLOAD,
+    DISPLAY_LISTEN,
+    DISPLAY_NONE,
+    COUNT
+} DisplayMode;
+
 typedef struct {
     bool mode; // Mode: Display or Save
     char url[TEXT_STORE_SIZE]; // URL

@@ -23,7 +23,7 @@
 #define KEY_NAME_SIZE                       22
 #define TEXT_STORE_SIZE                     40
 #define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
-#define DISPLAY_STORE_SIZE                  (1024)
+#define DISPLAY_STORE_SIZE                  (2048)
 
 typedef struct {
     SceneManager* scene_manager;
@@ -50,7 +50,8 @@ typedef struct {
     GetState* get_state; // Get state for get view
     Widget* text_box; // Text box for displaying uart responses
     char text_box_store[DISPLAY_STORE_SIZE + 1]; // Store for displaying uart responses
-    bool full_response; // Flag for display active
+    bool full_response; // Flag for attaching full uart response otherwise last line
+    DisplayMode display_mode; // Display mode for display view
 } App;
 
 #endif // APP_H

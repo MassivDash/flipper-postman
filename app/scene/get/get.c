@@ -120,7 +120,7 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case GetItemSetUrl:
             if(strcmp(app->get_state->url, "") == 0) {
-                strcpy(app->get_state->url, "google.com");
+                strcpy(app->get_state->url, "https://expresstest.spaceout.pl/");
             }
             app->selected_tx_string = app->get_state->url;
             app->text_input_state = TextInputState_GetUrl;
@@ -142,10 +142,11 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
 
                 // If method is GET, send GET request to the URL
                 // If method is GET_STREAM, send GET_STREAM request to the URL
-                if(getCommand(app->uart, app->get_state->url)) {
-                    FURI_LOG_E("GET_ERROR:", "Failed to send GET request");
+                if(app->get_state->method) {
+                    app->display_mode = DISPLAY_GET_STREAM;
+                } else {
+                    app->display_mode = DISPLAY_GET;
                 }
-
                 scene_manager_next_scene(app->scene_manager, Display);
             }
 
