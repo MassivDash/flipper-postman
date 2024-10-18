@@ -386,11 +386,31 @@ bool disconnectWiFiCommand(Uart* uart, const char* argument) {
     return false;
 }
 
+// URL is the argument
 bool getCommand(Uart* uart, const char* argument) {
-    FURI_LOG_D(
-        "UART_CMDS", "GET: %s\nSTATUS: <number>\nRESPONSE:\n<response>\nRESPONSE_END", argument);
+    FURI_LOG_D("UART_CMDS", "GET %s", argument);
+
+    char command[256];
+
+    // Build the command
+    snprintf(command, sizeof(command), "GET %s\n", argument);
+
     // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
+        return false;
+    }
+
+    // Wait for the response
+    uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 6000);
+    if(events & WorkerEvtRxDone) {
+        // Copy the response to text_box_store
+        strncpy(uart->app->text_box_store, uart->last_response, DISPLAY_STORE_SIZE);
+        uart->app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
+        return true;
+    }
+
+    FURI_LOG_E("UART_CMDS", "Failed to get response.");
+    return false;
 }
 
 bool getStreamCommand(Uart* uart, const char* argument) {

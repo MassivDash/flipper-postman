@@ -8,9 +8,9 @@
 
 // Enum for variable item list items
 typedef enum {
-    GetItemHeader,
-    GetItemSetUrl,
     GetItemToggleViewSave,
+    GetItemMethod,
+    GetItemSetUrl,
     GetItemAction,
     GetItemCount
 } GetItem;

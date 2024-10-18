@@ -4,6 +4,8 @@
 
 #include <furi.h>
 
+/** all scenes */
+
 typedef enum {
     SetUpDialog,
     MainMenu,
@@ -17,9 +19,11 @@ typedef enum {
     // Download,
     // Listen,
     // About,
+    Display,
     Count
 } AppScene;
 
+/** all views */
 typedef enum {
     AppView_SetupDialog,
     AppView_Menu,
@@ -33,6 +37,7 @@ typedef enum {
     // AppView_Download,
     // AppView_Listen,
     // AppView_About,
+    AppView_Display,
 } AppView;
 
 /** all custom events */
@@ -44,11 +49,12 @@ typedef enum {
     AppEvent_Input_Text,
     AppEvent_Connect_Favs,
     AppEvent_Get,
-    // AppEvent_Post,
-    // AppEvent_Build_http,
-    // AppEvent_Download,
-    // AppEvent_Listen,
-    // AppEvent_About,
+    AppEvent_Post,
+    AppEvent_Build_http,
+    AppEvent_Download,
+    AppEvent_Listen,
+    AppEvent_About,
+    AppEvent_Display,
 } AppEvent;
 
 /* main menu scene */
@@ -73,13 +79,14 @@ typedef enum {
     Get_Stream_Execute,
 } GetActionMenu;
 
+// Wifi / UART
 // Event Flags for UART Worker Thread
 
 typedef enum {
-    SetupDialogStateWelcome,
-    SetupDialogStateChecking,
-    SetupDialogStateResult
-} SetupDialogState;
+    BOARD_CONNECTED_WIFI_OFF,
+    BOARD_CONNECTED_WIFI_ON,
+    BOARD_ERROR
+} UartStatus;
 
 typedef enum {
     WorkerEvtStop = (1 << 0),
@@ -130,6 +137,14 @@ typedef enum {
 
 #define TEXT_STORE_SIZE 40
 
+// App Views States
+
+typedef enum {
+    SetupDialogStateWelcome,
+    SetupDialogStateChecking,
+    SetupDialogStateResult
+} SetupDialogState;
+
 typedef enum {
     TextInputState_GetUrl,
     TextInputState_WifiPassword,
@@ -142,6 +157,7 @@ typedef enum {
 typedef struct {
     bool mode; // Mode: Display or Save
     char url[TEXT_STORE_SIZE]; // URL
+    bool method; // Method: GET or GET_STREAM
 } GetState;
 
 #endif // STRUCTS_H

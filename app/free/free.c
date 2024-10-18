@@ -24,6 +24,7 @@ void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Text_Input);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Connect_Favs);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Get);
+    view_dispatcher_remove_view(app->view_dispatcher, AppView_Display);
     view_dispatcher_free(app->view_dispatcher);
     menu_free(app->menu);
     submenu_free(app->submenu);
@@ -31,6 +32,7 @@ void app_free(App* app) {
     submenu_free(app->submenu_wifi);
     variable_item_list_free(app->variable_item_list);
     dialog_ex_free(app->dialog);
+    text_box_free(app->text_box);
     uart_text_input_free(app->text_input);
     furi_timer_free(app->timer);
     furi_record_close(RECORD_STORAGE);

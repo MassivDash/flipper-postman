@@ -1,17 +1,21 @@
 
 #include "../app.h"
 #include "../structs.h"
-#include "./main_menu/main_menu.h"
-#include <gui/modules/dialog_ex.h>
 #include <gui/view.h>
 
-#include "./connect/connect.h"
-#include "./connect_favs/connect_favs.h"
-#include "./connect_details/connect_details.h"
-#include "./text_input/text_input.h"
+#include <gui/modules/dialog_ex.h> // Setup dialog (start up and checks)
 #include "./setup_dialog/setup_dialog.h"
 
-#include "./get/get.h"
+#include "./main_menu/main_menu.h" // Main menu
+
+#include "./connect/connect.h" // Connect submenu (list wifi's) get list from uart and display
+#include "./connect_favs/connect_favs.h" // Connect submenu (list wifi's) get list from csv and display
+#include "./connect_details/connect_details.h" // Connect details submenu (connect, disconnect, save to csv)
+
+#include "./text_input/text_input.h" // Text input for ssid and password, url, etc
+#include "./display/display.h" // Text box for displaying uart responses
+
+#include "./get/get.h" // Get View variable list
 
 #define TAG "Text_Input"
 /** collection of all scene on_enter handlers - in the same order as their enum
@@ -23,7 +27,8 @@ void (*const scene_on_enter_handlers[])(void*) = {
     scene_on_enter_connect_details,
     scene_on_enter_text_input,
     scene_on_enter_connect_favs,
-    scene_on_enter_get};
+    scene_on_enter_get,
+    scene_on_enter_display};
 
 /** collection of all scene on event handlers - in the same order as their enum
  */
@@ -34,7 +39,8 @@ bool (*const scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     scene_on_event_connect_details,
     scene_on_event_text_input,
     scene_on_event_connect_favs,
-    scene_on_event_get};
+    scene_on_event_get,
+    scene_on_event_display};
 
 /** collection of all scene on exit handlers - in the same order as their enum
  */
@@ -45,7 +51,8 @@ void (*const scene_on_exit_handlers[])(void*) = {
     scene_on_exit_connect_details,
     scene_on_exit_text_input,
     scene_on_exit_connect_favs,
-    scene_on_exit_get};
+    scene_on_exit_get,
+    scene_on_enter_display};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {
@@ -102,6 +109,9 @@ void view_dispatcher_init(App* app) {
     app->is_custom_tx_string = false;
     app->selected_tx_string = "";
 
+    //Text box for displaying uart responses
+    app->text_box = text_box_alloc();
+
     // Get / Post view
     app->variable_item_list = variable_item_list_alloc();
 
@@ -138,4 +148,7 @@ void view_dispatcher_init(App* app) {
 
     view_dispatcher_add_view(
         app->view_dispatcher, AppView_Get, variable_item_list_get_view(app->variable_item_list));
+
+    view_dispatcher_add_view(
+        app->view_dispatcher, AppView_Display, text_box_get_view(app->text_box));
 }
