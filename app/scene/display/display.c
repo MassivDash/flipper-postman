@@ -89,7 +89,7 @@ void scene_on_enter_display(void* context) {
     widget_add_text_scroll_element(
         app->text_box,
         0, // x coordinate
-        16, // y coordinate (below the header)
+        14, // y coordinate (below the header)
         128, // width
         48, // height
         app->text_box_store // text

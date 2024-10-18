@@ -101,8 +101,8 @@ typedef struct {
 
 #define RX_BUF_SIZE         (4096)
 #define MAX_WIFI_NETWORKS   20
-#define MAX_SSID_LENGTH     32
-#define MAX_PASSWORD_LENGTH 64
+#define MAX_SSID_LENGTH     128
+#define MAX_PASSWORD_LENGTH 128
 #define CONNECT_CMD_BUFFER_SIZE                       \
     (16 + MAX_SSID_LENGTH + 1 + MAX_PASSWORD_LENGTH + \
      1) // "WIFI_CONNECT: " + ssid + " " + password + null terminator
@@ -113,8 +113,8 @@ typedef struct {
 } WifiNetwork;
 
 typedef struct {
-    char ssid[32];
-    char password[64];
+    char ssid[128];
+    char password[128];
     bool is_default;
 } WifiCredential;
 
@@ -135,7 +135,7 @@ typedef enum {
     Details_Exit
 } Connect_DetailsActionMenu;
 
-#define TEXT_STORE_SIZE 40
+#define TEXT_STORE_SIZE 128
 
 // App Views States
 

@@ -181,7 +181,7 @@ void scene_on_enter_connect_details(void* context) {
     bool active = check_if_current_view_is_active(app);
 
     submenu_reset(app->submenu_wifi);
-    char header[64];
+    char header[256];
     if(active) {
         snprintf(header, sizeof(header), "%s (connected)", app->wifi_list.selected_ssid);
     } else {

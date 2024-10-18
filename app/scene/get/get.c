@@ -1,6 +1,5 @@
 #include "../../app.h"
 #include "../../structs.h"
-#include "../../uart/uart.h"
 #include "get.h"
 #include <furi.h>
 #include <furi_hal.h>
@@ -120,7 +119,7 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case GetItemSetUrl:
             if(strcmp(app->get_state->url, "") == 0) {
-                strcpy(app->get_state->url, "https://api.spacexdata.com/v3/rockets");
+                strcpy(app->get_state->url, "https://animechan.io/api/v1/quotes/random");
             }
             app->selected_tx_string = app->get_state->url;
             app->text_input_state = TextInputState_GetUrl;
