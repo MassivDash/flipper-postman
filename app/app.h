@@ -54,7 +54,7 @@ typedef struct {
     VariableItemList* variable_item_list; // Variable item list for get view
     GetState* get_state; // Get state for get view
     Widget* text_box; // Text box for displaying uart responses
-    char text_box_store[DISPLAY_STORE_SIZE + 1]; // Store for displaying uart responses
+    FuriString* text_box_store; // Store for displaying uart responses
     bool full_response; // Flag for attaching full uart response otherwise last line
     DisplayMode display_mode; // Display mode for display view
 } App;

@@ -7,51 +7,46 @@
 
 typedef void (*DisplayCallback)(App* app, const char* header);
 
-void get_the_header(App* app, char* header, size_t header_size) {
+void get_the_header(App* app, FuriString* header) {
     DisplayMode mode = app->display_mode;
     GetState* get_state = app->get_state;
+    furi_string_reset(header);
     switch(mode) {
     case DISPLAY_GET:
-        snprintf(header, header_size, "Getting: %s", get_state->url);
+        furi_string_printf(header, "Getting: %s", get_state->url);
         break;
     case DISPLAY_GET_STREAM:
-        snprintf(header, header_size, "Getting Stream: %s", get_state->url);
+        furi_string_printf(header, "Getting Stream: %s", get_state->url);
         break;
     case DISPLAY_POST:
-        snprintf(header, header_size, "Posting: %s", get_state->url);
+        furi_string_printf(header, "Posting: %s", get_state->url);
         break;
     case DISPLAY_BUILD_HTTP:
-        snprintf(header, header_size, "Building HTTP: %s", get_state->url);
+        furi_string_printf(header, "Building HTTP: %s", get_state->url);
         break;
     case DISPLAY_DOWNLOAD:
-        snprintf(header, header_size, "Downloading: %s", get_state->url);
+        furi_string_printf(header, "Downloading: %s", get_state->url);
         break;
     case DISPLAY_LISTEN:
-        snprintf(header, header_size, "Listening: %s", get_state->url);
+        furi_string_printf(header, "Listening: %s", get_state->url);
         break;
     default:
-        snprintf(header, header_size, "Unknown: %s", get_state->url);
+        furi_string_printf(header, "Unknown: %s", get_state->url);
         break;
     }
-    // No return needed as header is an output parameter
 }
 
-static void
-    append_to_status_line(char* status_line, const char* append_str, size_t status_line_size) {
-    FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
-    furi_string_cat(furi_status_line, append_str);
-    strncpy(status_line, furi_string_get_cstr(furi_status_line), status_line_size - 1);
-    status_line[status_line_size - 1] = '\0'; // Ensure null-termination
-    furi_string_free(furi_status_line);
+static void append_to_status_line(FuriString* status_line, const char* append_str) {
+    furi_string_cat(status_line, append_str);
 }
 
 void scene_on_enter_display(void* context) {
     App* app = context;
     furi_assert(app);
-    char header[64];
+    FuriString* header = furi_string_alloc();
 
     widget_reset(app->text_box);
-    get_the_header(app, header, sizeof(header));
+    get_the_header(app, header);
 
     widget_add_string_element(
         app->text_box,
@@ -60,7 +55,7 @@ void scene_on_enter_display(void* context) {
         AlignLeft, // horizontal alignment
         AlignTop, // vertical alignment
         FontPrimary, // font
-        header // text
+        furi_string_get_cstr(header) // text
     );
     // Switch to the Widget view
     view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Display);
@@ -71,17 +66,19 @@ void scene_on_enter_display(void* context) {
         bool success_stream = getCommand(app->uart, app->get_state->url);
         if(success_stream) {
             FURI_LOG_T(TAG, "GET_STREAM DISPLAY ACTION SUCCESS");
-            char status_line[128];
-            if(extract_status_line(app, status_line, sizeof(status_line))) {
-                FURI_LOG_T(TAG, "GET_STREAM DISPLAY RESPONSE (status) %s", status_line);
+            FuriString* status_line = furi_string_alloc();
+            if(extract_status_line(app, status_line)) {
+                FURI_LOG_T(
+                    TAG,
+                    "GET_STREAM DISPLAY RESPONSE (status) %s",
+                    furi_string_get_cstr(status_line));
             } else {
                 FURI_LOG_E(TAG, "GET_STREAM DISPLAY ERROR, DID NOT CATCH STATUS");
-                strncpy(status_line, "STATUS: Unknown or -1", sizeof(status_line));
-                status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
+                furi_string_set_str(status_line, "STATUS: Unknown or -1");
             }
 
             // Add (Direct) to status line
-            append_to_status_line(status_line, " (DIRECT)", sizeof(status_line));
+            append_to_status_line(status_line, " (Direct)");
 
             widget_reset(app->text_box);
             widget_add_string_element(
@@ -91,8 +88,9 @@ void scene_on_enter_display(void* context) {
                 AlignLeft, // horizontal alignment
                 AlignTop, // vertical alignment
                 FontPrimary, // font
-                status_line // text
+                furi_string_get_cstr(status_line) // text
             );
+            furi_string_free(status_line);
         } else {
             FURI_LOG_E(TAG, "GET STREAM DISPLAY ACTION FAILED");
         }
@@ -101,37 +99,33 @@ void scene_on_enter_display(void* context) {
         bool success = getCommand(app->uart, app->get_state->url);
         if(success) {
             FURI_LOG_I(TAG, "Success");
-            char status_line[128];
-            if(extract_status_line(app, status_line, sizeof(status_line))) {
-                FURI_LOG_I(TAG, "Status line: %s", status_line);
+            FuriString* status_line = furi_string_alloc();
+            if(extract_status_line(app, status_line)) {
+                FURI_LOG_I(TAG, "Status line: %s", furi_string_get_cstr(status_line));
             } else {
-                strncpy(status_line, "Unknown status", sizeof(status_line));
-                status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
+                furi_string_set_str(status_line, "Unknown status");
             }
 
             clear_new_lines(app);
-
             extract_response_text(app);
             bool isJson = is_json_response(app);
 
             FURI_LOG_D("POSTMAN", "isJson: %d", isJson);
 
+            // Pretty print the JSON (to the best of flipper small screen ability)
             if(isJson) {
-                // Pretty print the JSON (to the best of flipper small screen ability)
-                // char pretty_json[DISPLAY_STORE_SIZE];
-                // prettify_json(app, pretty_json, sizeof(pretty_json));
-                // strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
-                // app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
+                FuriString* pretty_json = furi_string_alloc();
+                if(prettify_json(app, pretty_json)) {
+                    furi_string_set(app->text_box_store, pretty_json);
 
-                // Add concat a (JSON VIEWER) to status line
-                // Append "(JSON)" to the status line
-                append_to_status_line(status_line, " (JSON)", sizeof(status_line));
-                // FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
-                // furi_string_cat(furi_status_line, " (JSON)");
-                // strncpy(
-                //     status_line, furi_string_get_cstr(furi_status_line), sizeof(status_line) - 1);
-                // status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
-                // furi_string_free(furi_status_line);
+                    // Add concat a (JSON VIEWER) to status line
+                    // Append "(JSON)" to the status line
+                    append_to_status_line(status_line, " (JSON)");
+                } else {
+                    // Fallback if prettification fails
+                    FURI_LOG_W(TAG, "JSON prettification failed");
+                }
+                furi_string_free(pretty_json);
             }
 
             widget_reset(app->text_box);
@@ -142,12 +136,12 @@ void scene_on_enter_display(void* context) {
                 AlignLeft, // horizontal alignment
                 AlignTop, // vertical alignment
                 FontPrimary, // font
-                status_line // text
+                furi_string_get_cstr(status_line) // text
             );
-
+            furi_string_free(status_line);
         } else {
             // Display error message, by coping the error message to the text_box_store
-            strncpy(app->text_box_store, "Get Command failed", DISPLAY_STORE_SIZE);
+            furi_string_set_str(app->text_box_store, "Get Command failed");
             FURI_LOG_I(TAG, "Get Command failed");
         }
         break;
@@ -177,8 +171,10 @@ void scene_on_enter_display(void* context) {
         14, // y coordinate (below the header)
         128, // width
         48, // height
-        app->text_box_store // text
+        furi_string_get_cstr(app->text_box_store) // text
     );
+
+    furi_string_free(header);
 }
 
 void scene_on_exit_display(void* context) {
@@ -187,9 +183,10 @@ void scene_on_exit_display(void* context) {
     FURI_LOG_D(TAG, "scene_on_exit_display");
     widget_reset(app->text_box);
     // Reset the text_box_store
-    app->text_box_store[0] = '\0';
+    furi_string_reset(app->text_box_store);
     app->display_mode = DISPLAY_NONE;
 }
+
 bool scene_on_event_display(void* context, SceneManagerEvent event) {
     FURI_LOG_T(TAG, "scene_on_event_display");
     App* app = context;

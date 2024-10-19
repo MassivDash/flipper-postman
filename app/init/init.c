@@ -31,6 +31,8 @@ App* init() {
         return NULL;
     }
 
+    app->text_box_store = furi_string_alloc();
+
     // Initialize the scene manager (GUI)
     scene_manager_init(app);
     view_dispatcher_init(app);

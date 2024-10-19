@@ -56,15 +56,7 @@ static int32_t uart_worker(void* context) {
 
                 if(app->full_response) {
                     // Append to text_box_store if full_response is set
-                    size_t text_box_len = strlen(app->text_box_store);
-                    if(text_box_len + len < sizeof(app->text_box_store)) {
-                        strncpy(app->text_box_store + text_box_len, (char*)uart->rx_buf, len);
-                        text_box_len += len;
-                        app->text_box_store[text_box_len] = '\0'; // Ensure null-termination
-                    } else {
-                        FURI_LOG_E("UART", "Text box store overflow.");
-                        text_box_len = 0; // Reset to avoid overflow
-                    }
+                    furi_string_cat_str(app->text_box_store, (char*)uart->rx_buf);
                 } else {
                     // Accumulate the response
                     if(response_len + len < sizeof(uart->last_response)) {
@@ -399,8 +391,6 @@ bool disconnectWiFiCommand(Uart* uart, const char* argument) {
     }
     return false;
 }
-
-// URL is the argument
 bool getCommand(Uart* uart, const char* argument) {
     FURI_LOG_D("UART_CMDS", "GET %s", argument);
 
@@ -424,12 +414,10 @@ bool getCommand(Uart* uart, const char* argument) {
     if(events & WorkerEvtRxDone) {
         if(uart->app->full_response) {
             // Check if text_box_store is empty or null
-            if(uart->app->text_box_store[0] == '\0') {
+            if(furi_string_size(uart->app->text_box_store) == 0) {
                 // Input error message to text_box_store
-                strncpy(
-                    uart->app->text_box_store,
-                    "GET_ERROR: Failed to send GET request",
-                    DISPLAY_STORE_SIZE - 1);
+                furi_string_set_str(
+                    uart->app->text_box_store, "GET_ERROR: Failed to send GET request");
             }
         }
     } else {
@@ -438,13 +426,9 @@ bool getCommand(Uart* uart, const char* argument) {
     }
 
     // Check if there is a response otherwise input error message to text_box_store
-    if(uart->app->text_box_store[0] == '\0') {
-        FURI_LOG_D(TAG, "response error");
-        strncpy(
-            uart->app->text_box_store,
-            "GET_ERROR: Failed to send GET request",
-            DISPLAY_STORE_SIZE - 1);
-        uart->app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+    if(furi_string_size(uart->app->text_box_store) == 0) {
+        FURI_LOG_D("UART_CMDS", "response error");
+        furi_string_set_str(uart->app->text_box_store, "GET_ERROR: Failed to send GET request");
         return false;
     }
 

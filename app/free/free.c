@@ -31,6 +31,7 @@ void app_free(App* app) {
     variable_item_list_free(app->variable_item_list);
     dialog_ex_free(app->dialog);
     widget_free(app->text_box);
+    furi_string_free(app->text_box_store);
     uart_text_input_free(app->text_input);
     furi_timer_free(app->timer);
     furi_record_close(RECORD_STORAGE);
