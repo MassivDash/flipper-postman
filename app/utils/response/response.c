@@ -4,50 +4,6 @@
 #include <stdio.h>
 #include "../../app.h" // Include the app header to access app structure
 
-#define TAG "RESPONSE"
-// bool extract_response_text(App* app) {
-//     const char* start_marker = "RESPONSE:";
-//     const char* end_marker = "RESPONSE_END";
-//     const size_t start_marker_len = strlen(start_marker);
-//     FuriString* furi_str = furi_string_alloc_set_str(app->text_box_store);
-//     size_t text_length = furi_string_size(furi_str);
-//     const char* text = furi_string_get_cstr(furi_str);
-
-//     // Find start marker
-//     size_t start_pos = furi_string_search_str(furi_str, start_marker, 0);
-//     if(start_pos == FURI_STRING_FAILURE) {
-//         furi_string_free(furi_str);
-//         return false;
-//     }
-
-//     // Move past the start marker
-//     start_pos += start_marker_len;
-
-//     // Search for end marker starting from the position after start marker
-//     size_t end_pos = furi_string_search_str(furi_str, end_marker, start_pos);
-
-//     // Calculate extraction length
-//     size_t extract_length;
-//     if(end_pos == FURI_STRING_FAILURE) {
-//         // If no end marker found, take everything until the end
-//         extract_length = text_length - start_pos;
-//     } else {
-//         extract_length = end_pos - start_pos;
-//     }
-
-//     // Safety check for buffer overflow
-//     if(extract_length >= DISPLAY_STORE_SIZE) {
-//         extract_length = DISPLAY_STORE_SIZE - 1;
-//     }
-
-//     // Extract the content
-//     memcpy(app->text_box_store, text + start_pos, extract_length);
-//     app->text_box_store[extract_length] = '\0';
-
-//     furi_string_free(furi_str);
-//     return true;
-// }
-
 size_t find_start_marker(const FuriString* furi_str, const char* start_marker) {
     size_t start_pos = furi_string_search_str(furi_str, start_marker, 0);
     if(start_pos != FURI_STRING_FAILURE) {
@@ -321,4 +277,3 @@ void prettify_json(App* app, char* output, size_t output_size) {
 
     output[output_index] = '\0'; // Null-terminate the output string
 }
-
