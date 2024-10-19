@@ -39,11 +39,6 @@ static void get_scene_mode_callback(VariableItem* item) {
 static void get_scene_action_callback(VariableItem* item) {
     App* app = variable_item_get_context(item);
     furi_assert(app);
-    if(app->get_state->mode) {
-        // Logic to save to file
-    } else {
-        // Logic to send request
-    }
 }
 
 void draw_get_menu(App* app) {
@@ -119,7 +114,7 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case GetItemSetUrl:
             if(strcmp(app->get_state->url, "") == 0) {
-                strcpy(app->get_state->url, "https://animechan.io/api/v1/quotes/random");
+                strcpy(app->get_state->url, "https://api.spacexdata.com/v3/launches/67");
             }
             app->selected_tx_string = app->get_state->url;
             app->text_input_state = TextInputState_GetUrl;

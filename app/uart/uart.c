@@ -410,6 +410,7 @@ bool getCommand(Uart* uart, const char* argument) {
         snprintf(command, sizeof(command), "GET_STREAM %s\n", argument);
     }
     uart->app->full_response = true;
+
     // Send the command to the UART
     if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
         return false;
@@ -422,8 +423,9 @@ bool getCommand(Uart* uart, const char* argument) {
             // Check if text_box_store is empty or null
             if(uart->app->text_box_store[0] == '\0') {
                 // Copy the last response to text_box_store
-                strncpy(uart->app->text_box_store, uart->last_response, DISPLAY_STORE_SIZE);
-                uart->app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
+                strncpy(uart->app->text_box_store, uart->last_response, DISPLAY_STORE_SIZE - 1);
+                uart->app->text_box_store[DISPLAY_STORE_SIZE - 1] =
+                    '\0'; // Ensure null-termination
                 return true;
             }
         }
@@ -432,19 +434,18 @@ bool getCommand(Uart* uart, const char* argument) {
         return false;
     }
 
-    // Check if there is a response other wise input error message to text_box_store
-
+    // Check if there is a response otherwise input error message to text_box_store
     if(uart->app->text_box_store[0] == '\0') {
         FURI_LOG_D("POSTMAN", "response error");
         strncpy(
             uart->app->text_box_store,
             "GET_ERROR: Failed to send GET request",
-            DISPLAY_STORE_SIZE);
-        uart->app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
-        return true;
+            DISPLAY_STORE_SIZE - 1);
+        uart->app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 bool postCommand(Uart* uart, const char* argument) {

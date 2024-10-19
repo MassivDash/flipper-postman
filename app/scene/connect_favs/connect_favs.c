@@ -1,6 +1,6 @@
 #include "../../app.h"
 #include "../../structs.h"
-#include "../../utils/trimwhitespace.h"
+#include "../../utils/trimwhitespace/trimwhitespace.h"
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/modules/submenu.h>

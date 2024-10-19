@@ -3,6 +3,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/modules/widget.h>
+#include "../../utils/response/response.h"
 
 #define TAG "display_app"
 
@@ -60,11 +61,69 @@ void scene_on_enter_display(void* context) {
     switch(app->display_mode) {
     case DISPLAY_GET_STREAM:
         FURI_LOG_I(TAG, "Getting stream");
-        getCommand(app->uart, app->get_state->url);
+        bool success_stream = getCommand(app->uart, app->get_state->url);
+        if(success_stream) {
+            FURI_LOG_I(TAG, "Success");
+            char status_line[64];
+            if(extract_status_line(app, status_line, sizeof(status_line))) {
+                FURI_LOG_I(TAG, "Status line: %s", status_line);
+            } else {
+                strncpy(status_line, "Unknown status", sizeof(status_line));
+                status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
+            }
+            widget_reset(app->text_box);
+            widget_add_string_element(
+                app->text_box,
+                0, // x coordinate
+                0, // y coordinate
+                AlignLeft, // horizontal alignment
+                AlignTop, // vertical alignment
+                FontPrimary, // font
+                status_line // text
+            );
+            extract_response_stream(app->text_box_store);
+        } else {
+            FURI_LOG_I(TAG, "Failed");
+        }
         break;
     case DISPLAY_GET:
+        bool success = getCommand(app->uart, app->get_state->url);
+        if(success) {
+            FURI_LOG_I(TAG, "Success");
+            char status_line[64];
+            if(extract_status_line(app, status_line, sizeof(status_line))) {
+                FURI_LOG_I(TAG, "Status line: %s", status_line);
+            } else {
+                strncpy(status_line, "Unknown status", sizeof(status_line));
+                status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
+            }
+            // clear_new_lines(app);
+
+            // bool isJson = is_json_response(app->text_box_store);
+
+            // if(isJson) {
+            //     char pretty_json[DISPLAY_STORE_SIZE];
+            //     prettify_json(app, pretty_json, sizeof(pretty_json));
+            //     strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
+            //     app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+            // }
+
+            widget_reset(app->text_box);
+            widget_add_string_element(
+                app->text_box,
+                0, // x coordinate
+                0, // y coordinate
+                AlignLeft, // horizontal alignment
+                AlignTop, // vertical alignment
+                FontPrimary, // font
+                status_line // text
+            );
+
+        } else {
+            FURI_LOG_I(TAG, "Failed");
+        }
         FURI_LOG_I(TAG, "Getting data");
-        getCommand(app->uart, app->get_state->url);
+        extract_response_text(app->text_box_store);
         break;
     case DISPLAY_POST:
         FURI_LOG_I(TAG, "Displaying POST view");
