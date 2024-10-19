@@ -111,21 +111,21 @@ void scene_on_enter_display(void* context) {
 
             FURI_LOG_D("POSTMAN", "isJson: %d", isJson);
 
-            // if(isJson) {
-            //     //Pretty print the JSON (to the best of flipper small screen ability)
-            //     char pretty_json[DISPLAY_STORE_SIZE];
-            //     prettify_json(app, pretty_json, sizeof(pretty_json));
-            //     strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
-            //     app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+            if(isJson) {
+                // Pretty print the JSON (to the best of flipper small screen ability)
+                char pretty_json[DISPLAY_STORE_SIZE];
+                prettify_json(app, pretty_json, sizeof(pretty_json));
+                strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
+                app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
 
-            //     // Add concat a (JSON VIEWER) to status line
-            //     FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
-            //     furi_string_cat(furi_status_line, " (JSON)");
-            //     strncpy(
-            //         status_line, furi_string_get_cstr(furi_status_line), sizeof(status_line) - 1);
-            //     status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
-            //     furi_string_free(furi_status_line);
-            // }
+                // Add concat a (JSON VIEWER) to status line
+                FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
+                furi_string_cat(furi_status_line, " (JSON)");
+                strncpy(
+                    status_line, furi_string_get_cstr(furi_status_line), sizeof(status_line) - 1);
+                status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
+                furi_string_free(furi_status_line);
+            }
 
             widget_reset(app->text_box);
             widget_add_string_element(
