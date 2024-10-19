@@ -247,6 +247,7 @@ bool is_json_response(App* app) {
     // Check the whole string if no packet markers are found
     return is_json(app);
 }
+
 void prettify_json(App* app, char* output, size_t output_size) {
     size_t indent = 0;
     size_t output_index = 0;
@@ -320,3 +321,4 @@ void prettify_json(App* app, char* output, size_t output_size) {
 
     output[output_index] = '\0'; // Null-terminate the output string
 }
+

@@ -3,31 +3,39 @@
 #include "../scene/scene.h"
 #include "../uart/uart.h"
 
-#define TAG "postman_app"
+#define TAG "FLIPPER_POSTMAN"
 
-App *init() {
-  FURI_LOG_T(TAG, "init");
-  App *app = malloc(sizeof(App));
-  if (!app) {
-    FURI_LOG_E(TAG, "Failed to allocate memory for App");
-    return NULL;
-  }
-  app->uart = uart_terminal_uart_init(app);
+App* init() {
+    FURI_LOG_T(TAG, "Initializing postman flipper app");
 
-  if (!init_csv(app)) {
-    FURI_LOG_E(TAG, "Failed to initialize CSV");
-    free(app);
-    return NULL;
-  }
+    // Allocate memory for the app
+    App* app = malloc(sizeof(App));
+    if(!app) {
+        FURI_LOG_E(TAG, "Failed to allocate memory for App");
+        return NULL;
+    }
 
-  if (!app->uart) {
-    FURI_LOG_E(TAG, "Failed to initialize UART");
-    free(app);
-    return NULL;
-  }
+    // Initialize the UART
+    // This is the main protocol for communicating with the board
+    app->uart = uart_terminal_uart_init(app);
 
-  scene_manager_init(app);
-  view_dispatcher_init(app);
+    if(!app->uart) {
+        FURI_LOG_E(TAG, "Failed to initialize UART");
+        free(app);
+        return NULL;
+    }
 
-  return app;
+    // Initialize the CSV file
+    // Sync the CSV networks to app->csv_networks
+    if(!init_csv(app->file, app->csv_networks)) {
+        FURI_LOG_E(TAG, "Failed to initialize CSV");
+        free(app);
+        return NULL;
+    }
+
+    // Initialize the scene manager (GUI)
+    scene_manager_init(app);
+    view_dispatcher_init(app);
+
+    return app;
 }
