@@ -5,8 +5,6 @@
 #include <gui/modules/widget.h>
 #include "../../utils/response/response.h"
 
-#define TAG "display_app"
-
 typedef void (*DisplayCallback)(App* app, const char* header);
 
 void get_the_header(App* app, char* header, size_t header_size) {

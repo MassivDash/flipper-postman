@@ -5,8 +5,6 @@
 #include <furi_hal.h>
 #include <gui/modules/variable_item_list.h>
 
-#define TAG "get_app"
-
 static void get_scene_select_callback(void* context, uint32_t index) {
     App* app = context;
     furi_assert(app);

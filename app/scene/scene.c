@@ -17,7 +17,6 @@
 
 #include "./get/get.h" // Get View variable list
 
-#define TAG "Text_Input"
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
 void (*const scene_on_enter_handlers[])(void*) = {

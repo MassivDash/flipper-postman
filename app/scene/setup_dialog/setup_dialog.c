@@ -5,7 +5,6 @@
 #include <gui/view_dispatcher.h>
 #include <postmanflipx_icons.h>
 
-#define TAG                 "Postman_SetupDialog"
 #define WELCOME_DURATION_MS 1500
 
 static void setup_dialog_callback(DialogExResult result, void* context) {

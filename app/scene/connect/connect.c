@@ -7,8 +7,6 @@
 #include <furi_hal.h>
 #include <gui/modules/submenu.h>
 
-#define TAG "connect_app"
-
 void submenu_callback_select_wifi(void* context, uint32_t index) {
     FURI_LOG_T(TAG, "submenu_callback_select_wifi");
     furi_assert(context);

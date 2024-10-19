@@ -7,8 +7,6 @@
 #include <furi_hal.h>
 #include <gui/modules/submenu.h>
 
-#define TAG "connect_details_app"
-
 bool check_if_current_view_is_active(App* app) {
     // Check if board is On
     bool board_on = app->status == BOARD_CONNECTED_WIFI_ON;
@@ -142,7 +140,7 @@ void submenu_callback_save_to_csv(void* context, uint32_t index) {
     strncpy(wifi.password, app->wifi_list.password_ssid, MAX_PASSWORD_LENGTH - 1);
     wifi.is_default = false;
 
-    if(!write_wifi_to_csv(app, &wifi)) {
+    if(!write_wifi_to_csv(app->file, &wifi)) {
         FURI_LOG_E(TAG, "Failed to save WiFi details to CSV");
     }
     // sync csv with flipper memory

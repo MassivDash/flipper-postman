@@ -11,8 +11,6 @@
 #include <gui/view_dispatcher.h>
 #include <storage/storage.h>
 
-#define TAG "tracker_app"
-
 void app_free(App* app) {
     FURI_LOG_T(TAG, "free");
     uart_terminal_uart_free(app->uart);

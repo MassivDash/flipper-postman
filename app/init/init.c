@@ -3,8 +3,6 @@
 #include "../scene/scene.h"
 #include "../uart/uart.h"
 
-#define TAG "FLIPPER_POSTMAN"
-
 App* init() {
     FURI_LOG_T(TAG, "Initializing postman flipper app");
 
@@ -36,6 +34,6 @@ App* init() {
     // Initialize the scene manager (GUI)
     scene_manager_init(app);
     view_dispatcher_init(app);
-
+    FURI_LOG_T(TAG, "Successful initializing postman flipper app");
     return app;
 }

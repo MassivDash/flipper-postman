@@ -24,6 +24,9 @@
 #define TEXT_STORE_SIZE                     128
 #define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
 
+// TAG for logging
+#define TAG "FLIPPER_POSTMAN"
+
 // Big json responses like SpaceX API will be cut off at 6k
 // After 7k the widget scroll started to be buggy, were not able to scroll to the end
 #define DISPLAY_STORE_SIZE (1024 * 7 - 100)
