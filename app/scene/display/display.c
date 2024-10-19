@@ -90,7 +90,7 @@ void scene_on_enter_display(void* context) {
         bool success = getCommand(app->uart, app->get_state->url);
         if(success) {
             FURI_LOG_I(TAG, "Success");
-            char status_line[64];
+            char status_line[128];
             if(extract_status_line(app, status_line, sizeof(status_line))) {
                 FURI_LOG_I(TAG, "Status line: %s", status_line);
             } else {
@@ -99,6 +99,28 @@ void scene_on_enter_display(void* context) {
             }
 
             clear_new_lines(app);
+
+            extract_response_text(app);
+            bool isJson = is_json_response(app);
+
+            FURI_LOG_D("POSTMAN", "isJson: %d", isJson);
+
+            if(isJson) {
+                //Pretty print the JSON (to the best of flipper small screen ability)
+                char pretty_json[DISPLAY_STORE_SIZE];
+                prettify_json(app, pretty_json, sizeof(pretty_json));
+                strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
+                app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+
+                // Add concat a (JSON VIEWER) to status line
+
+                FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
+                furi_string_cat(furi_status_line, " (JSON)");
+                strncpy(
+                    status_line, furi_string_get_cstr(furi_status_line), sizeof(status_line) - 1);
+                status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
+                furi_string_free(furi_status_line);
+            }
 
             widget_reset(app->text_box);
             widget_add_string_element(
@@ -112,21 +134,10 @@ void scene_on_enter_display(void* context) {
             );
 
         } else {
-            FURI_LOG_I(TAG, "Failed");
+            // Display error message, by coping the error message to the text_box_store
+            strncpy(app->text_box_store, "Get Command failed", DISPLAY_STORE_SIZE);
+            FURI_LOG_I(TAG, "Get Command failed");
         }
-        FURI_LOG_I(TAG, "Getting data");
-        extract_response_text(app);
-        bool isJson = is_json_response(app);
-
-        FURI_LOG_D("POSTMAN", "isJson: %d", isJson);
-
-        if(isJson) {
-            char pretty_json[DISPLAY_STORE_SIZE];
-            prettify_json(app, pretty_json, sizeof(pretty_json));
-            strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
-            app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
-        }
-
         break;
     case DISPLAY_POST:
         FURI_LOG_I(TAG, "Displaying POST view");
@@ -164,7 +175,7 @@ void scene_on_exit_display(void* context) {
     FURI_LOG_D(TAG, "scene_on_exit_display");
     widget_reset(app->text_box);
     // Reset the text_box_store
-    app->text_box_store[0] = '\0';
+    // app->text_box_store[0] = '\0';
     app->display_mode = DISPLAY_NONE;
 }
 bool scene_on_event_display(void* context, SceneManagerEvent event) {
@@ -173,26 +184,5 @@ bool scene_on_event_display(void* context, SceneManagerEvent event) {
     furi_assert(event);
 
     bool consumed = false;
-    // switch(event.type) {
-    // case SceneManagerEventTypeBack:
-    //     FURI_LOG_D(TAG, "Back event");
-    //     if(app->display_mode == DISPLAY_GET_STREAM || app->display_mode == DISPLAY_GET) {
-    //         app->display_mode =
-    //             DISPLAY_NONE; // Assuming DISPLAY_NONE is a valid enum value representing no mode
-    //         scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Get);
-    //         consumed = true;
-    //     }
-    //     break;
-    // case SceneManagerEventTypeCustom:
-    //     consumed = true;
-    //     break;
-    // case SceneManagerEventTypeTick:
-    //     consumed = true;
-    //     break;
-    // default:
-    //     consumed = false;
-    //     break;
-    // }
-
     return consumed;
 }

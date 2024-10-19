@@ -247,7 +247,6 @@ bool is_json_response(App* app) {
     // Check the whole string if no packet markers are found
     return is_json(app);
 }
-
 void prettify_json(App* app, char* output, size_t output_size) {
     size_t indent = 0;
     size_t output_index = 0;
@@ -261,10 +260,15 @@ void prettify_json(App* app, char* output, size_t output_size) {
         case '[':
             if(!in_string) {
                 output[output_index++] = ch;
-                output[output_index++] = '\n';
-                indent++;
-                for(size_t j = 0; j < indent; j++) {
-                    output[output_index++] = ' ';
+                // Check for empty array or object
+                if(app->text_box_store[i + 1] == '}' || app->text_box_store[i + 1] == ']') {
+                    output[output_index++] = app->text_box_store[++i];
+                } else {
+                    output[output_index++] = '\n';
+                    indent++;
+                    for(size_t j = 0; j < indent; j++) {
+                        output[output_index++] = ' ';
+                    }
                 }
             } else {
                 output[output_index++] = ch;
