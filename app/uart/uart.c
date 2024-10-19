@@ -63,6 +63,7 @@ static int32_t uart_worker(void* context) {
                         app->text_box_store[text_box_len] = '\0'; // Ensure null-termination
                     } else {
                         FURI_LOG_E("UART", "Text box store overflow.");
+                        text_box_len = 0; // Reset to avoid overflow
                     }
                 } else {
                     // Accumulate the response
@@ -424,11 +425,11 @@ bool getCommand(Uart* uart, const char* argument) {
         if(uart->app->full_response) {
             // Check if text_box_store is empty or null
             if(uart->app->text_box_store[0] == '\0') {
-                // Copy the last response to text_box_store
-                strncpy(uart->app->text_box_store, uart->last_response, DISPLAY_STORE_SIZE - 1);
-                uart->app->text_box_store[DISPLAY_STORE_SIZE - 1] =
-                    '\0'; // Ensure null-termination
-                return true;
+                // Input error message to text_box_store
+                strncpy(
+                    uart->app->text_box_store,
+                    "GET_ERROR: Failed to send GET request",
+                    DISPLAY_STORE_SIZE - 1);
             }
         }
     } else {
@@ -438,7 +439,7 @@ bool getCommand(Uart* uart, const char* argument) {
 
     // Check if there is a response otherwise input error message to text_box_store
     if(uart->app->text_box_store[0] == '\0') {
-        FURI_LOG_D("POSTMAN", "response error");
+        FURI_LOG_D(TAG, "response error");
         strncpy(
             uart->app->text_box_store,
             "GET_ERROR: Failed to send GET request",
