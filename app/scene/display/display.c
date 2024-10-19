@@ -36,6 +36,15 @@ void get_the_header(App* app, char* header, size_t header_size) {
     // No return needed as header is an output parameter
 }
 
+static void
+    append_to_status_line(char* status_line, const char* append_str, size_t status_line_size) {
+    FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
+    furi_string_cat(furi_status_line, append_str);
+    strncpy(status_line, furi_string_get_cstr(furi_status_line), status_line_size - 1);
+    status_line[status_line_size - 1] = '\0'; // Ensure null-termination
+    furi_string_free(furi_status_line);
+}
+
 void scene_on_enter_display(void* context) {
     App* app = context;
     furi_assert(app);
@@ -71,12 +80,8 @@ void scene_on_enter_display(void* context) {
                 status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
             }
 
-            // Add (Direct Stream) to status line
-            FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
-            furi_string_cat(furi_status_line, " (DIRECT STREAM)");
-            strncpy(status_line, furi_string_get_cstr(furi_status_line), sizeof(status_line) - 1);
-            status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
-            furi_string_free(furi_status_line);
+            // Add (Direct) to status line
+            append_to_status_line(status_line, " (DIRECT)", sizeof(status_line));
 
             widget_reset(app->text_box);
             widget_add_string_element(
@@ -113,18 +118,20 @@ void scene_on_enter_display(void* context) {
 
             if(isJson) {
                 // Pretty print the JSON (to the best of flipper small screen ability)
-                char pretty_json[DISPLAY_STORE_SIZE];
-                prettify_json(app, pretty_json, sizeof(pretty_json));
-                strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
-                app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
+                // char pretty_json[DISPLAY_STORE_SIZE];
+                // prettify_json(app, pretty_json, sizeof(pretty_json));
+                // strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
+                // app->text_box_store[DISPLAY_STORE_SIZE] = '\0'; // Ensure null-termination
 
                 // Add concat a (JSON VIEWER) to status line
-                FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
-                furi_string_cat(furi_status_line, " (JSON)");
-                strncpy(
-                    status_line, furi_string_get_cstr(furi_status_line), sizeof(status_line) - 1);
-                status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
-                furi_string_free(furi_status_line);
+                // Append "(JSON)" to the status line
+                append_to_status_line(status_line, " (JSON)", sizeof(status_line));
+                // FuriString* furi_status_line = furi_string_alloc_set_str(status_line);
+                // furi_string_cat(furi_status_line, " (JSON)");
+                // strncpy(
+                //     status_line, furi_string_get_cstr(furi_status_line), sizeof(status_line) - 1);
+                // status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
+                // furi_string_free(furi_status_line);
             }
 
             widget_reset(app->text_box);

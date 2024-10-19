@@ -27,9 +27,8 @@
 // TAG for logging
 #define TAG "FLIPPER_POSTMAN"
 
-// Big json responses like SpaceX API will be cut off at 6k
 // After 7k the widget scroll started to be buggy, were not able to scroll to the end
-#define DISPLAY_STORE_SIZE (1024 * 7 - 100)
+#define DISPLAY_STORE_SIZE (1024 * 7 - 100) // this seems to be the biggest stable size
 
 typedef struct {
     SceneManager* scene_manager;
