@@ -48,49 +48,83 @@
 //     return true;
 // }
 
+size_t find_start_marker(const FuriString* furi_str, const char* start_marker) {
+    size_t start_pos = furi_string_search_str(furi_str, start_marker, 0);
+    if(start_pos != FURI_STRING_FAILURE) {
+        FURI_LOG_T(TAG, "Start marker found at position: %zu", start_pos);
+    } else {
+        FURI_LOG_T(TAG, "Start marker not found");
+    }
+    return start_pos;
+}
+
+size_t find_end_marker(const FuriString* furi_str, const char* end_marker, size_t start_pos) {
+    size_t end_pos = furi_string_search_str(furi_str, end_marker, start_pos);
+    if(end_pos != FURI_STRING_FAILURE) {
+        FURI_LOG_T(TAG, "End marker found at position: %zu", end_pos);
+    } else {
+        FURI_LOG_T(TAG, "End marker not found");
+    }
+    return end_pos;
+}
+
 bool extract_response_text(App* app) {
-    const char* start_marker = "RESPONSE:";
-    const char* end_marker = "RESPONSE_END";
+    const char* start_marker = "RESPONSE: ";
+    const char* end_marker = " RESPONSE_END";
 
-    // Work directly with the existing string to avoid extra allocations
-    FuriString* store_str = furi_string_alloc_set_str(app->text_box_store);
+    FuriString* furi_str = furi_string_alloc_set_str(app->text_box_store);
+    size_t start_pos = find_start_marker(furi_str, start_marker);
+    size_t end_pos = find_end_marker(furi_str, end_marker, start_pos);
 
-    // Find start position
-    size_t start_pos = furi_string_search_str(store_str, start_marker, 0);
-    if(start_pos == FURI_STRING_FAILURE) {
-        furi_string_free(store_str);
-        return false;
+    // If the start marker is found
+    if(start_pos != FURI_STRING_FAILURE) {
+        start_pos += strlen(start_marker); // Move past the start marker
+
+        // If the end marker is found and is after the start marker
+        if(end_pos != FURI_STRING_FAILURE && end_pos > start_pos) {
+            size_t length = end_pos - start_pos; // Calculate the length of the text to extract
+
+            // Extract the text between the markers
+            FuriString* extracted_str = furi_string_alloc();
+            furi_string_set_n(extracted_str, furi_str, start_pos, length);
+
+            // Trim leading and trailing spaces
+            furi_string_trim(extracted_str, " ");
+
+            // Copy the extracted text back to text_box_store
+            strncpy(
+                app->text_box_store, furi_string_get_cstr(extracted_str), DISPLAY_STORE_SIZE - 1);
+            app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+
+            // Free the allocated FuriStrings
+            furi_string_free(furi_str);
+            furi_string_free(extracted_str);
+
+            return true;
+        } else {
+            // If no end marker is found, extract till the end of the string
+            const char* remaining_text = furi_string_get_cstr(furi_str) + start_pos;
+            FuriString* remaining_str = furi_string_alloc_set_str(remaining_text);
+
+            // Trim leading and trailing spaces
+            furi_string_trim(remaining_str, " ");
+
+            strncpy(
+                app->text_box_store, furi_string_get_cstr(remaining_str), DISPLAY_STORE_SIZE - 1);
+            app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+
+            // Free the allocated FuriStrings
+            furi_string_free(furi_str);
+            furi_string_free(remaining_str);
+
+            return true;
+        }
     }
 
-    // Adjust start position to skip marker
-    start_pos += strlen(start_marker);
+    // Free the allocated FuriString
+    furi_string_free(furi_str);
 
-    // Find end position
-    size_t end_pos = furi_string_search_str(store_str, end_marker, start_pos);
-
-    // Extract the relevant portion using string_set_n
-    // If no end marker found, it will take until the end
-    size_t length = (end_pos != FURI_STRING_FAILURE) ? (end_pos - start_pos) :
-                                                       (furi_string_size(store_str) - start_pos);
-
-    // Ensure we don't overflow the buffer
-    if(length >= DISPLAY_STORE_SIZE) {
-        length = DISPLAY_STORE_SIZE - 1;
-    }
-
-    // Create temporary string for the extracted portion
-    FuriString* result = furi_string_alloc();
-    furi_string_set_n(result, store_str, start_pos, length);
-
-    // Copy result to the store and ensure null termination
-    strncpy(app->text_box_store, furi_string_get_cstr(result), DISPLAY_STORE_SIZE - 1);
-    app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0';
-
-    // Cleanup
-    furi_string_free(result);
-    furi_string_free(store_str);
-
-    return true;
+    return false; // No valid response text found
 }
 
 void clear_new_lines(App* app) {
@@ -99,7 +133,7 @@ void clear_new_lines(App* app) {
 
     for(size_t i = 0; i < furi_string_size(furi_str); i++) {
         char ch = furi_string_get_char(furi_str, i);
-        if(ch == '\n') {
+        if(ch == '\n' || ch == '\r' || ch == '\t') {
             furi_string_push_back(cleaned_str, ' '); // Replace new line with space
         } else {
             furi_string_push_back(cleaned_str, ch);
@@ -181,13 +215,21 @@ bool extract_status_line(App* app, char* status_line, size_t status_line_size) {
 }
 
 bool is_json(App* app) {
-    // Check if the text starts with '{' or '[' and ends with '}' or ']'
-    size_t len = strlen(app->text_box_store);
-    if((app->text_box_store[0] == '{' && app->text_box_store[len - 1] == '}') ||
-       (app->text_box_store[0] == '[' && app->text_box_store[len - 1] == ']')) {
-        return true;
+    // Trim leading and trailing whitespace and null characters
+    FuriString* furi_str = furi_string_alloc_set_str(app->text_box_store);
+    furi_string_trim(furi_str, " \t\n\r\0");
+
+    const char* trimmed_text = furi_string_get_cstr(furi_str);
+    size_t len = strlen(trimmed_text);
+
+    bool result = false;
+    if(len > 0 && ((trimmed_text[0] == '{' && trimmed_text[len - 1] == '}') ||
+                   (trimmed_text[0] == '[' && trimmed_text[len - 1] == ']'))) {
+        result = true;
     }
-    return false;
+
+    furi_string_free(furi_str);
+    return result;
 }
 
 bool is_json_response(App* app) {

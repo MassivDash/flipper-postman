@@ -81,7 +81,7 @@ void scene_on_enter_display(void* context) {
                 FontPrimary, // font
                 status_line // text
             );
-            extract_response_stream(app->text_box_store);
+            extract_response_stream(app);
         } else {
             FURI_LOG_I(TAG, "Failed");
         }
@@ -97,16 +97,8 @@ void scene_on_enter_display(void* context) {
                 strncpy(status_line, "Unknown status", sizeof(status_line));
                 status_line[sizeof(status_line) - 1] = '\0'; // Ensure null-termination
             }
-            // clear_new_lines(app);
 
-            // bool isJson = is_json_response(app->text_box_store);
-
-            // if(isJson) {
-            //     char pretty_json[DISPLAY_STORE_SIZE];
-            //     prettify_json(app, pretty_json, sizeof(pretty_json));
-            //     strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
-            //     app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
-            // }
+            clear_new_lines(app);
 
             widget_reset(app->text_box);
             widget_add_string_element(
@@ -123,7 +115,18 @@ void scene_on_enter_display(void* context) {
             FURI_LOG_I(TAG, "Failed");
         }
         FURI_LOG_I(TAG, "Getting data");
-        extract_response_text(app->text_box_store);
+        extract_response_text(app);
+        bool isJson = is_json_response(app);
+
+        FURI_LOG_D("POSTMAN", "isJson: %d", isJson);
+
+        if(isJson) {
+            char pretty_json[DISPLAY_STORE_SIZE];
+            prettify_json(app, pretty_json, sizeof(pretty_json));
+            strncpy(app->text_box_store, pretty_json, DISPLAY_STORE_SIZE);
+            app->text_box_store[DISPLAY_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+        }
+
         break;
     case DISPLAY_POST:
         FURI_LOG_I(TAG, "Displaying POST view");

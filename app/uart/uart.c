@@ -38,6 +38,7 @@ void uart_terminal_uart_on_irq_cb(
         furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
     }
 }
+
 static int32_t uart_worker(void* context) {
     Uart* uart = (Uart*)context;
     App* app = uart->app; // Assuming uart->app points to the App structure
@@ -53,27 +54,8 @@ static int32_t uart_worker(void* context) {
             if(len > 0) {
                 uart->rx_buf[len] = '\0'; // Null-terminate the received data
 
-                // Accumulate the response
-                if(response_len + len < sizeof(uart->last_response)) {
-                    strncpy(uart->last_response + response_len, (char*)uart->rx_buf, len);
-                    response_len += len;
-                    uart->last_response[response_len] = '\0'; // Ensure null-termination
-
-                    // Check if the response contains a newline character
-                    if(strchr(uart->last_response, '\n')) {
-                        if(uart->handle_rx_data_cb) {
-                            uart->handle_rx_data_cb(
-                                (uint8_t*)uart->last_response, response_len, uart->app);
-                        }
-                        response_len = 0; // Reset for the next response
-                    }
-                } else {
-                    FURI_LOG_E("UART", "Response buffer overflow.");
-                    response_len = 0; // Reset to avoid overflow
-                }
-
-                // Append to text_box_store if full_response is set
                 if(app->full_response) {
+                    // Append to text_box_store if full_response is set
                     size_t text_box_len = strlen(app->text_box_store);
                     if(text_box_len + len < sizeof(app->text_box_store)) {
                         strncpy(app->text_box_store + text_box_len, (char*)uart->rx_buf, len);
@@ -81,6 +63,26 @@ static int32_t uart_worker(void* context) {
                         app->text_box_store[text_box_len] = '\0'; // Ensure null-termination
                     } else {
                         FURI_LOG_E("UART", "Text box store overflow.");
+                    }
+                } else {
+                    // Accumulate the response
+                    if(response_len + len < sizeof(uart->last_response)) {
+                        strncpy(uart->last_response + response_len, (char*)uart->rx_buf, len);
+                        response_len += len;
+                        uart->last_response[response_len] = '\0'; // Ensure null-termination
+
+                        // Check if the response contains a newline character
+                        if(strchr(uart->last_response, '\n')) {
+                            if(uart->handle_rx_data_cb) {
+                                uart->handle_rx_data_cb(
+                                    (uint8_t*)uart->last_response, response_len, uart->app);
+                            }
+                            response_len = 0; // Reset for the next response
+                        }
+                    } else {
+                        FURI_LOG_E("UART", "Response buffer overflow.");
+                        response_len = 0; // Reset to avoid overflow
+                        uart->last_response[0] = '\0'; // Clear the buffer
                     }
                 }
             }
