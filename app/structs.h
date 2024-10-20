@@ -72,13 +72,6 @@ typedef enum {
     MenuSelection_Connect_Favs,
 } AppMenuSelection;
 
-/** Submenu for get view */
-typedef enum {
-    Get_SetUrl,
-    Get_Execute,
-    Get_Stream_Execute,
-} GetActionMenu;
-
 // Wifi / UART
 // Event Flags for UART Worker Thread
 
@@ -170,5 +163,11 @@ typedef struct {
     char url[TEXT_STORE_SIZE]; // URL
     bool method; // Method: GET or GET_STREAM
 } GetState;
+
+#define MAX_URL_LENGTH 256
+
+typedef struct {
+    char url[MAX_URL_LENGTH];
+} UrlList;
 
 #endif // STRUCTS_H

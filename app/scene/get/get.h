@@ -12,6 +12,9 @@ typedef enum {
     GetItemMethod,
     GetItemSetUrl,
     GetItemAction,
+    GetItemSaveToCsv,
+    GetItemLoadFromCsv,
+    GetItemDeleteFromCsv,
     GetItemCount
 } GetItem;
 

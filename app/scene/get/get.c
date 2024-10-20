@@ -4,18 +4,69 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/modules/variable_item_list.h>
+#include "../../csv/csv_get_url/csv_get_url.h"
+
+bool compare_url(const char* url1, const char* url2) {
+    if(url1 == NULL || url2 == NULL) {
+        return false;
+    }
+    return strcmp(url1, url2) == 0;
+}
+
+static bool url_in_csv(App* app, const char* url) {
+    FuriString* url_str = furi_string_alloc();
+    furi_string_set_str(url_str, url);
+    FuriString* csv_url = furi_string_alloc();
+    bool url_in_csv = false;
+
+    for(size_t i = 0; i < MAX_URLS; i++) {
+        furi_string_set_str(csv_url, app->url_list[i].url);
+        if(compare_url(furi_string_get_cstr(url_str), furi_string_get_cstr(csv_url))) {
+            url_in_csv = true;
+            break;
+        }
+    }
+
+    furi_string_free(url_str);
+    furi_string_free(csv_url);
+    return url_in_csv;
+}
 
 static void get_scene_select_callback(void* context, uint32_t index) {
     App* app = context;
     furi_assert(app);
     furi_assert(app->view_dispatcher);
-    view_dispatcher_send_custom_event(app->view_dispatcher, index);
-}
 
-// Dummy function to get the URL
-static void get_scene_set_url_callback(VariableItem* item) {
-    App* app = variable_item_get_context(item);
-    furi_assert(app);
+    // index from 0 till 2, pass the index to the dispatcher
+    // The first 3 buttons are always there
+    if(index == 0 || index == 1 || index == 2) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, index);
+        return;
+    }
+
+    if(strlen(app->get_state->url) > 0 && index == 3) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, index);
+    }
+
+    bool url_found = url_in_csv(app, app->get_state->url);
+
+    if(strlen(app->get_state->url) > 0 && index == 4) {
+        if(url_found) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, GetItemDeleteFromCsv);
+        } else {
+            view_dispatcher_send_custom_event(app->view_dispatcher, GetItemSaveToCsv);
+        }
+    }
+
+    if(strlen(app->url_list[0].url) > 0) {
+        if(strlen(app->get_state->url) <= 0 && index == 3) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, GetItemLoadFromCsv);
+        }
+
+        if(index == 5) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, GetItemLoadFromCsv);
+        }
+    }
 }
 
 static void get_scene_method_callback(VariableItem* item) {
@@ -32,11 +83,6 @@ static void get_scene_mode_callback(VariableItem* item) {
     // Toggle between view and save to file
     app->get_state->mode = !app->get_state->mode;
     draw_get_menu(app);
-}
-
-static void get_scene_action_callback(VariableItem* item) {
-    App* app = variable_item_get_context(item);
-    furi_assert(app);
 }
 
 void draw_get_menu(App* app) {
@@ -65,16 +111,32 @@ void draw_get_menu(App* app) {
         variable_item_set_current_value_text(item, app->get_state->method ? "Stream" : "Get");
     }
 
-    item =
-        variable_item_list_add(variable_item_list, "Set URL", 0, get_scene_set_url_callback, app);
+    item = variable_item_list_add(variable_item_list, "Set URL", 0, NULL, app);
 
     if(strlen(app->get_state->url) > 0) {
         item = variable_item_list_add(
             variable_item_list,
             app->get_state->mode ? "Save to File" : "Send Request",
             0,
-            get_scene_action_callback,
+            NULL,
             app);
+    }
+
+    // // Check if current URL is in the csv list
+    bool url_found = url_in_csv(app, app->get_state->url);
+    FURI_LOG_D(TAG, "URL in CSV: %d", url_found);
+
+    //Check if the URL is in the CSV
+    if(strlen(app->get_state->url) > 0) {
+        if(url_found) {
+            item = variable_item_list_add(variable_item_list, "Delete from CSV", 0, NULL, app);
+        } else {
+            item = variable_item_list_add(variable_item_list, "Save to CSV", 0, NULL, app);
+        }
+    }
+
+    if(strlen(app->url_list[0].url) > 0) {
+        item = variable_item_list_add(variable_item_list, "Load from CSV", 0, NULL, app);
     }
 }
 
@@ -118,8 +180,36 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             app->text_input_state = TextInputState_GetUrl;
             scene_manager_next_scene(app->scene_manager, Text_Input);
             break;
+        case GetItemSaveToCsv:
+            FURI_LOG_D(TAG, "Save to CSV");
+            const char* url_to_write = app->get_state->url;
+            furi_assert(url_to_write);
+
+            if(!write_url_to_csv(app, url_to_write)) {
+                FURI_LOG_E(TAG, "Failed to write URL to CSV");
+                break;
+            }
+            sync_csv_get_url_to_mem(app);
+            draw_get_menu(app);
+            break;
         case GetItemToggleViewSave:
             // No logic
+            break;
+        case GetItemDeleteFromCsv:
+            FURI_LOG_D(TAG, "Delete from CSV");
+            const char* url_to_delete = app->get_state->url;
+            furi_assert(url_to_delete);
+
+            if(!delete_url_from_csv(app, url_to_delete)) {
+                FURI_LOG_E(TAG, "Failed to delete URL from CSV");
+                break;
+            }
+            sync_csv_get_url_to_mem(app);
+            draw_get_menu(app);
+            break;
+        case GetItemLoadFromCsv:
+            FURI_LOG_D(TAG, "Load from CSV");
+
             break;
         case GetItemAction:
             // Logic to handle action
@@ -128,7 +218,6 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             // If mode is save to file, save to file
 
             if(app->get_state->mode) {
-                // Save to file
             } else {
                 // If mode is send request, send request
 

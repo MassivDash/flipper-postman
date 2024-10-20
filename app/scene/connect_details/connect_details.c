@@ -1,6 +1,6 @@
 #include "./connect_details.h"
 #include "../../app.h"
-#include "../../csv/csv.h"
+#include "../../csv/csv_wifi/csv_wifi.h"
 #include "../../structs.h"
 #include "../../uart/uart.h"
 #include <furi.h>
@@ -140,12 +140,11 @@ void submenu_callback_save_to_csv(void* context, uint32_t index) {
     strncpy(wifi.password, app->wifi_list.password_ssid, MAX_PASSWORD_LENGTH - 1);
     wifi.is_default = false;
 
-    if(!write_wifi_to_csv(app->file, &wifi)) {
+    if(!write_wifi_to_csv(app, &wifi)) {
         FURI_LOG_E(TAG, "Failed to save WiFi details to CSV");
     }
     // sync csv with flipper memory
-    sync_csv_to_mem(app->file, app->csv_networks);
-
+    sync_csv_to_mem(app, app->csv_networks);
     // refresh the menu
     scene_on_enter_connect_details(context);
 }
@@ -155,11 +154,11 @@ void submenu_callback_forget_network(void* context, uint32_t index) {
     FURI_LOG_T(TAG, "submenu_callback_forget_network");
     App* app = context;
 
-    if(!delete_wifi_from_csv(app->file, app->wifi_list.selected_ssid)) {
+    if(!delete_wifi_from_csv(app, app->wifi_list.selected_ssid)) {
         FURI_LOG_E(TAG, "Failed to forget network");
     }
     // sync csv with flipper memory
-    sync_csv_to_mem(app->file, app->csv_networks);
+    sync_csv_to_mem(app, app->csv_networks);
 
     // refresh the menu
     scene_on_enter_connect_details(context);

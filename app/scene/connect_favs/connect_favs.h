@@ -3,7 +3,7 @@
 
 #include "../../app.h"
 #include "../../structs.h"
-#include "../../csv/csv.h"
+#include "../../csv/csv_wifi/csv_wifi.h"
 #include "../../utils/trimwhitespace/trimwhitespace.h"
 #include <furi.h>
 #include <furi_hal.h>
