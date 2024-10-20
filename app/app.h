@@ -59,13 +59,12 @@ typedef struct {
     Storage* storage; // Storage for CSV files
     AvailableWifiList wifi_list; // This holds the board wifi scan results
     WifiCredential csv_networks[MAX_WIFI_NETWORKS]; // List of wifi networks from csv
-    File* file_wifi; // CSV file for storing wifi credentials
+    File* file; // CSV file ops
 
     // GET VIEW
     VariableItemList* variable_item_list; // Variable item list for get view
     GetState* get_state; // Get state for get view
     UrlList url_list[MAX_URLS]; // List of get urls
-    File* file_get_url; // CSV file for storing get urls
 
     // DISPLAY VIEW
     Widget* text_box; // Text box for displaying uart responses

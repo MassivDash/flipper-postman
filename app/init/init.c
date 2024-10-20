@@ -24,8 +24,10 @@ App* init() {
     }
 
     app->storage = furi_record_open(RECORD_STORAGE);
+    app->file = storage_file_alloc(app->storage);
     // Initialize the CSV file for wifi files
     // Sync the CSV networks to app->csv_networks
+
     init_csv_wifi(app);
 
     // Initialize the CSV file for URLs
