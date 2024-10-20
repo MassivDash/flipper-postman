@@ -97,12 +97,6 @@ void view_dispatcher_init(App* app) {
     // Connect submenu (list wifi's)
     app->submenu = submenu_alloc();
 
-    // Connect submenu (list wifi's)
-    app->submenu_favs = submenu_alloc();
-
-    // Connect details submenu (connect, disconnect, save to csv)
-    app->submenu_wifi = submenu_alloc();
-
     // Text input for ssid and password
     app->text_input = uart_text_input_alloc();
     app->is_custom_tx_string = false;
@@ -135,7 +129,7 @@ void view_dispatcher_init(App* app) {
         app->view_dispatcher, AppView_Connect, submenu_get_view(app->submenu));
 
     view_dispatcher_add_view(
-        app->view_dispatcher, AppView_Connect_Details, submenu_get_view(app->submenu_wifi));
+        app->view_dispatcher, AppView_Connect_Details, submenu_get_view(app->submenu));
 
     view_dispatcher_add_view(
         app->view_dispatcher,
@@ -143,7 +137,7 @@ void view_dispatcher_init(App* app) {
         uart_text_input_get_view(app->text_input));
 
     view_dispatcher_add_view(
-        app->view_dispatcher, AppView_Connect_Favs, submenu_get_view(app->submenu_favs));
+        app->view_dispatcher, AppView_Connect_Favs, submenu_get_view(app->submenu));
 
     view_dispatcher_add_view(
         app->view_dispatcher, AppView_Get, variable_item_list_get_view(app->variable_item_list));

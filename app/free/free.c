@@ -26,8 +26,6 @@ void app_free(App* app) {
     view_dispatcher_free(app->view_dispatcher);
     menu_free(app->menu);
     submenu_free(app->submenu);
-    submenu_free(app->submenu_favs);
-    submenu_free(app->submenu_wifi);
     variable_item_list_free(app->variable_item_list);
     dialog_ex_free(app->dialog);
     widget_free(app->text_box);

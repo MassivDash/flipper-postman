@@ -61,7 +61,7 @@ void submenu_callback_disconnect_connect(void* context, uint32_t index) {
     if(active) {
         // Disconnect logic here
         FURI_LOG_I(TAG, "Disconnecting from WiFi");
-        submenu_change_item_label(app->submenu_wifi, 0, "Disconnecting ...");
+        submenu_change_item_label(app->submenu, 0, "Disconnecting ...");
         if(disconnectWiFiCommand(app->uart, NULL)) {
             app->status = BOARD_CONNECTED_WIFI_OFF;
             app->wifi_list.connected_ssid[0] = '\0';
@@ -74,7 +74,7 @@ void submenu_callback_disconnect_connect(void* context, uint32_t index) {
     if(is_not_active) {
         // Connect logic here
         FURI_LOG_I(TAG, "Connecting to WiFi");
-        submenu_change_item_label(app->submenu_wifi, 0, "Connecting ...");
+        submenu_change_item_label(app->submenu, 0, "Connecting ...");
         // Creating the string for connect cmd, WIFI_CONNECT: <ssid> <password>
         char connect_cmd[CONNECT_CMD_BUFFER_SIZE];
 
@@ -177,7 +177,7 @@ void scene_on_enter_connect_details(void* context) {
 
     bool active = check_if_current_view_is_active(app);
 
-    submenu_reset(app->submenu_wifi);
+    submenu_reset(app->submenu);
     char header[256];
     if(active) {
         snprintf(header, sizeof(header), "%s (connected)", app->wifi_list.selected_ssid);
@@ -185,7 +185,7 @@ void scene_on_enter_connect_details(void* context) {
         snprintf(header, sizeof(header), "%s", app->wifi_list.selected_ssid);
     }
 
-    submenu_set_header(app->submenu_wifi, header);
+    submenu_set_header(app->submenu, header);
     bool wifi_csv_found = check_if_wifi_has_csv_password(app);
     bool password_set = check_if_password_set(app);
     //Load password from csv
@@ -196,44 +196,32 @@ void scene_on_enter_connect_details(void* context) {
 
     if(active) {
         submenu_add_item(
-            app->submenu_wifi,
+            app->submenu,
             "Disconnect",
             Details_Disconnect,
             submenu_callback_disconnect_connect,
             app);
     } else {
         submenu_add_item(
-            app->submenu_wifi,
-            "Connect",
-            Details_Disconnect,
-            submenu_callback_disconnect_connect,
-            app);
+            app->submenu, "Connect", Details_Disconnect, submenu_callback_disconnect_connect, app);
     }
 
     if(wifi_csv_found) {
         submenu_add_item(
-            app->submenu_wifi,
-            "Edit Password",
-            Details_SetPassword,
-            submenu_callback_set_password,
-            app);
+            app->submenu, "Edit Password", Details_SetPassword, submenu_callback_set_password, app);
 
         submenu_add_item(
-            app->submenu_wifi,
-            "Forget network",
-            Details_Forget,
-            submenu_callback_forget_network,
-            app);
+            app->submenu, "Forget network", Details_Forget, submenu_callback_forget_network, app);
     } else {
         submenu_add_item(
-            app->submenu_wifi,
+            app->submenu,
             !password_set ? "Set Password" : "Edit Password",
             Details_SetPassword,
             submenu_callback_set_password,
             app);
 
         password_set ? submenu_add_item(
-                           app->submenu_wifi,
+                           app->submenu,
                            "Save to flipper",
                            Details_SaveToCsv,
                            submenu_callback_save_to_csv,
@@ -241,8 +229,7 @@ void scene_on_enter_connect_details(void* context) {
                        NULL;
     }
 
-    submenu_add_item(
-        app->submenu_wifi, "Exit to main menu", Details_Exit, submenu_callback_exit, app);
+    submenu_add_item(app->submenu, "Exit to main menu", Details_Exit, submenu_callback_exit, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect_Details);
 }
@@ -276,5 +263,5 @@ bool scene_on_event_connect_details(void* context, SceneManagerEvent event) {
 void scene_on_exit_connect_details(void* context) {
     FURI_LOG_T(TAG, "scene_on_exit_connect_details");
     App* app = context;
-    submenu_reset(app->submenu_wifi);
+    submenu_reset(app->submenu);
 }

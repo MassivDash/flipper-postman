@@ -35,8 +35,6 @@ typedef struct {
     ViewDispatcher* view_dispatcher;
     Menu* menu; // Main menu
     Submenu* submenu;
-    Submenu* submenu_favs; // Wifi favs
-    Submenu* submenu_wifi; // Selected wifi submenu
 
     // START UP SCENE
     FuriTimer* timer;
@@ -55,11 +53,13 @@ typedef struct {
     const char* selected_tx_string; // Selected text input string
     TextInputState text_input_state; // Current text input state
 
-    // WIFI CSV LIST
+    // Files and Storage
+    File* file; // CSV file ops
     Storage* storage; // Storage for CSV files
+
+    // WIFI lists
     AvailableWifiList wifi_list; // This holds the board wifi scan results
     WifiCredential csv_networks[MAX_WIFI_NETWORKS]; // List of wifi networks from csv
-    File* file; // CSV file ops
 
     // GET VIEW
     VariableItemList* variable_item_list; // Variable item list for get view

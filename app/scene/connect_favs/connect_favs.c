@@ -52,8 +52,8 @@ void update_fav_wifi_menu(App* app) {
 
     // Clear the submenu and add the actual WiFi networks
     if(app->csv_networks[0].ssid[0] != '\0') {
-        submenu_reset(app->submenu_favs);
-        submenu_set_header(app->submenu_favs, "Favorite WiFi's");
+        submenu_reset(app->submenu);
+        submenu_set_header(app->submenu, "Favorite WiFi's");
 
         // Add WiFi networks to submenu with updated state
         for(size_t i = 0; i < MAX_WIFI_CREDENTIALS && app->csv_networks[i].ssid[0] != '\0'; i++) {
@@ -75,16 +75,11 @@ void update_fav_wifi_menu(App* app) {
             } else {
                 snprintf(display_name, sizeof(display_name), "%s", app->csv_networks[i].ssid);
             }
-            submenu_add_item(
-                app->submenu_favs, display_name, i, submenu_callback_select_fav_wifi, app);
+            submenu_add_item(app->submenu, display_name, i, submenu_callback_select_fav_wifi, app);
         }
     } else {
         submenu_add_item(
-            app->submenu_favs,
-            "No favorite WiFi networks found",
-            0,
-            submenu_callback_no_fav_wifi,
-            app);
+            app->submenu, "No favorite WiFi networks found", 0, submenu_callback_no_fav_wifi, app);
     }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Connect_Favs);
@@ -133,5 +128,5 @@ void scene_on_exit_connect_favs(void* context) {
     for(size_t i = 0; i < MAX_WIFI_CREDENTIALS && app->csv_networks[i].ssid[0] != '\0'; i++) {
     }
 
-    submenu_reset(app->submenu_favs);
+    submenu_reset(app->submenu);
 }
