@@ -17,9 +17,6 @@ bool uart_terminal_uart_check_status(Uart* uart);
 
 // Cmds
 bool listWiFiCommand(Uart* uart, const char* argument);
-bool setSSIDCommand(Uart* uart, const char* argument);
-bool setPasswordCommand(Uart* uart, const char* argument);
-bool activateWiFiCommand(Uart* uart, const char* argument);
 bool activeWifiCommand(Uart* uart, const char* argument);
 bool disconnectWiFiCommand(Uart* uart, const char* argument);
 bool getCommand(Uart* uart, const char* argument);

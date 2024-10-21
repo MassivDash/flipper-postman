@@ -96,8 +96,8 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
                     sizeof(app->wifi_list.password_ssid) - 1);
                 app->wifi_list.password_ssid[sizeof(app->wifi_list.password_ssid) - 1] =
                     '\0'; // Ensure null-termination
-                scene_manager_previous_scene(app->scene_manager);
                 consumed = true;
+                scene_manager_previous_scene(app->scene_manager);
             }
             break;
         case TextInputState_GetUrl:
@@ -121,20 +121,6 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
                 scene_manager_next_scene(app->scene_manager, Display);
             }
             break;
-        // case TextInputState_PostUrl:
-        //     if(event.event == AppEvent_Post) {
-        //         // Handle Post URL input completion
-        //         strncpy(
-        //             app->post_state->payload,
-        //             app->text_input_store,
-        //             sizeof(app->post_state->payload) - 1);
-        //         app->post_state->payload[sizeof(app->post_state->payload) - 1] =
-        //             '\0'; // Ensure null-termination
-        //         scene_manager_previous_scene(app->scene_manager);
-        //         consumed = true;
-        //     }
-        //     break;
-        // Add cases for other TextInputState values as needed
         default:
             break;
         }
@@ -146,5 +132,6 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
 void scene_on_exit_text_input(void* context) {
     App* app = context;
     app->is_custom_tx_string = false;
+    app->selected_tx_string = "";
     uart_text_input_reset(app->text_input);
 }
