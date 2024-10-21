@@ -37,6 +37,7 @@ static void get_scene_select_callback(void* context, uint32_t index) {
     furi_assert(app);
     furi_assert(app->view_dispatcher);
 
+    FURI_LOG_D(TAG, "get_scene_select_callback: %ld", index);
     // index from 0 till 2, pass the index to the dispatcher
     // The first 3 buttons are always there
     if(index == 0 || index == 1 || index == 2) {
@@ -59,7 +60,7 @@ static void get_scene_select_callback(void* context, uint32_t index) {
     }
 
     if(strlen(app->url_list[0].url) > 0) {
-        if(strlen(app->get_state->url) <= 0 && index == 3) {
+        if(!(strlen(app->get_state->url) > 0) && index == 3) {
             view_dispatcher_send_custom_event(app->view_dispatcher, GetItemLoadFromCsv);
         }
 
@@ -111,7 +112,8 @@ void draw_get_menu(App* app) {
         variable_item_set_current_value_text(item, app->get_state->method ? "Stream" : "Get");
     }
 
-    item = variable_item_list_add(variable_item_list, "Set URL", 0, NULL, app);
+    item = variable_item_list_add(
+        variable_item_list, strlen(app->get_state->url) > 0 ? "Edit Url" : "Set Url", 0, NULL, app);
 
     if(strlen(app->get_state->url) > 0) {
         item = variable_item_list_add(
@@ -170,7 +172,6 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        consumed = true;
         switch(event.event) {
         case GetItemSetUrl:
             if(strcmp(app->get_state->url, "") == 0) {
@@ -179,6 +180,7 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             app->selected_tx_string = app->get_state->url;
             app->text_input_state = TextInputState_GetUrl;
             scene_manager_next_scene(app->scene_manager, Text_Input);
+            consumed = true;
             break;
         case GetItemSaveToCsv:
             FURI_LOG_D(TAG, "Save to CSV");
@@ -191,9 +193,11 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             }
             sync_csv_get_url_to_mem(app);
             draw_get_menu(app);
+            consumed = true;
             break;
         case GetItemToggleViewSave:
             // No logic
+            consumed = true;
             break;
         case GetItemDeleteFromCsv:
             FURI_LOG_D(TAG, "Delete from CSV");
@@ -206,10 +210,12 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             }
             sync_csv_get_url_to_mem(app);
             draw_get_menu(app);
+            consumed = true;
             break;
         case GetItemLoadFromCsv:
             FURI_LOG_D(TAG, "Load from CSV");
-
+            scene_manager_next_scene(app->scene_manager, Get_Url_List);
+            consumed = true;
             break;
         case GetItemAction:
             // Logic to handle action
@@ -230,9 +236,10 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
                 }
                 scene_manager_next_scene(app->scene_manager, Display);
             }
-
+            consumed = true;
             break;
         default:
+            consumed = false;
             break;
         }
     }

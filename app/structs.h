@@ -14,12 +14,13 @@ typedef enum {
     Text_Input,
     Connect_Favs,
     Get,
+    Display,
+    Get_Url_List,
     // Post,
     // Build_http,
     // Download,
     // Listen,
     // About,
-    Display,
     Count
 } AppScene;
 
@@ -32,6 +33,7 @@ typedef enum {
     AppView_Connect_Text_Input,
     AppView_Connect_Favs,
     AppView_Get,
+    AppView_Get_Url_List,
     // AppView_Post,
     // AppView_Build_http,
     // AppView_Download,
@@ -55,6 +57,7 @@ typedef enum {
     AppEvent_Listen,
     AppEvent_About,
     AppEvent_Display,
+    AppEvent_Get_Url_List,
 } AppEvent;
 
 /* main menu scene */
