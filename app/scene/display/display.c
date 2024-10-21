@@ -107,7 +107,19 @@ void scene_on_enter_display(void* context) {
             }
 
             clear_new_lines(app);
-            extract_response_text(app);
+
+            if(extract_response_text(app, "RESPONSE: ", " RESPONSE_END")) {
+                FURI_LOG_I(TAG, "Response text extracted");
+            } else {
+                FURI_LOG_E(TAG, "Failed to extract response text");
+                // In the instance of content length being -1, or huge response, extract the stream
+                if(extract_response_text(app, "STREAM: ", " STREAM_END")) {
+                    FURI_LOG_I(TAG, "Stream extracted");
+                } else {
+                    FURI_LOG_E(TAG, "Failed to extract stream");
+                }
+            }
+
             bool isJson = is_json_response(app);
 
             FURI_LOG_D("POSTMAN", "isJson: %d", isJson);
