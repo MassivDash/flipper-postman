@@ -58,6 +58,7 @@ typedef enum {
     AppEvent_About,
     AppEvent_Display,
     AppEvent_Get_Url_List,
+    AppEvent_Set_Filename,
 } AppEvent;
 
 /* main menu scene */

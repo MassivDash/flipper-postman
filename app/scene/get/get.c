@@ -110,6 +110,10 @@ void draw_get_menu(App* app) {
         item = variable_item_list_add(
             variable_item_list, "Method", 2, get_scene_method_callback, app);
         variable_item_set_current_value_text(item, app->get_state->method ? "Stream" : "Get");
+    } else {
+        // if save to file mode, add filename
+        item = variable_item_list_add(variable_item_list, "Method", 1, NULL, app);
+        variable_item_set_current_value_text(item, "Stream to file");
     }
 
     item = variable_item_list_add(
@@ -224,6 +228,10 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             // If mode is save to file, save to file
 
             if(app->get_state->mode) {
+                // If save to file mode, move to filename input
+                app->text_input_state = TextInputState_Filename;
+                scene_manager_next_scene(app->scene_manager, Text_Input);
+
             } else {
                 // If mode is send request, send request
 

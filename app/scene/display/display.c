@@ -165,6 +165,12 @@ void scene_on_enter_display(void* context) {
         break;
     case DISPLAY_DOWNLOAD:
         FURI_LOG_I(TAG, "Displaying DOWNLOAD view");
+        bool success_download = saveToFileCommand(app->uart, app->get_state->url);
+        if(success_download) {
+            FURI_LOG_I(TAG, "Download success");
+        } else {
+            FURI_LOG_E(TAG, "Download failed");
+        }
         break;
     case DISPLAY_LISTEN:
         FURI_LOG_I(TAG, "Displaying LISTEN view");
@@ -195,6 +201,8 @@ void scene_on_exit_display(void* context) {
     FURI_LOG_D(TAG, "scene_on_exit_display");
     widget_reset(app->text_box);
     // Reset the text_box_store
+    app->save_to_file = false;
+    app->filename[0] = '\0';
     furi_string_reset(app->text_box_store);
     app->display_mode = DISPLAY_NONE;
 }
@@ -204,7 +212,18 @@ bool scene_on_event_display(void* context, SceneManagerEvent event) {
     App* app = context;
     furi_assert(app);
     furi_assert(event);
-
     bool consumed = false;
+    switch(event.type) {
+    case(SceneManagerEventTypeBack):
+        if(app->display_mode == DISPLAY_DOWNLOAD) {
+            scene_manager_search_and_switch_to_another_scene(app->scene_manager, Get);
+            consumed = true;
+        }
+        break;
+    default:
+        consumed = false;
+        break;
+    }
+
     return consumed;
 }

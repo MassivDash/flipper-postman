@@ -54,7 +54,32 @@ static int32_t uart_worker(void* context) {
             if(len > 0) {
                 uart->rx_buf[len] = '\0'; // Null-terminate the received data
 
-                if(app->full_response) {
+                if(app->save_to_file && app->filename[0] != '\0') {
+                    // Create a FuriString to hold the full path
+                    FuriString* full_path = furi_string_alloc();
+                    furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), app->filename);
+
+                    // Stream directly to file if save_to_file is set and filename is not empty
+                    File* file = storage_file_alloc(app->storage);
+                    if(storage_file_open(
+                           file, furi_string_get_cstr(full_path), FSAM_WRITE, FSOM_OPEN_APPEND)) {
+                        if(!storage_file_write(file, uart->rx_buf, len)) {
+                            FURI_LOG_E("UART", "DOWNLOAD_ERROR: Failed to write to file");
+                            // Copy error message to text_box_store
+                            furi_string_cat_str(
+                                app->text_box_store, "DOWNLOAD_ERROR: Failed to write to file\n");
+                        }
+                        storage_file_close(file);
+                    } else {
+                        FURI_LOG_E("UART", "DOWNLOAD_ERROR: Failed to open file for writing");
+                        // Copy error message to text_box_store
+                        furi_string_cat_str(
+                            app->text_box_store,
+                            "DOWNLOAD_ERROR: Failed to open file for writing\n");
+                    }
+                    storage_file_free(file);
+                    furi_string_free(full_path);
+                } else if(app->full_response) {
                     // Append to text_box_store if full_response is set
                     furi_string_cat_str(app->text_box_store, (char*)uart->rx_buf);
                 } else {
@@ -433,6 +458,47 @@ bool getCommand(Uart* uart, const char* argument) {
     }
 
     return true;
+}
+
+bool saveToFileCommand(Uart* uart, const char* argument) {
+    FURI_LOG_D("UART_CMDS", "GET_STREAM: %s\n", argument);
+    uart->app->save_to_file = true;
+
+    char command[256];
+    snprintf(command, sizeof(command), "GET_STREAM %s\n", argument);
+    if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
+        return false;
+    }
+
+    uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 6000);
+    if(events & WorkerEvtRxDone) {
+        // Check if text_box_store is has somewhere "DOWNLOAD_ERROR:"
+        bool no_error =
+            !strstr(furi_string_get_cstr(uart->app->text_box_store), "DOWNLOAD_ERROR:");
+        FuriString* full_path = furi_string_alloc();
+        furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), uart->app->filename);
+
+        bool file_present =
+            storage_file_exists(uart->app->storage, furi_string_get_cstr(full_path));
+
+        if(no_error && file_present) {
+            //Copy over success message to text_box_store
+            furi_string_set_str(
+                uart->app->text_box_store, "Download successful, file saved to sdcard/app_data/");
+            FuriString* filename_str = furi_string_alloc();
+            furi_string_set_str(filename_str, uart->app->filename);
+            furi_string_cat_str(uart->app->text_box_store, furi_string_get_cstr(filename_str));
+            furi_string_free(filename_str);
+
+            return true;
+        }
+        furi_string_free(full_path);
+        return false;
+    } else {
+        FURI_LOG_E("UART", "No response received from the board.");
+        return false;
+    }
+    return false;
 }
 
 bool postCommand(Uart* uart, const char* argument) {

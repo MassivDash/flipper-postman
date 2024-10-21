@@ -66,6 +66,10 @@ typedef struct {
     GetState* get_state; // Get state for get view
     UrlList url_list[MAX_URLS]; // List of get urls
 
+    // Save to file global flag for uart responses
+    bool save_to_file; // Flag for saving uart responses to file
+    char filename[KEY_NAME_SIZE]; // Filename for saving uart responses
+
     // DISPLAY VIEW
     Widget* text_box; // Text box for displaying uart responses
     FuriString* text_box_store; // Store for displaying uart responses

@@ -35,3 +35,4 @@ bool buildHttpShowResponseHeadersCommand(Uart* uart, const char* argument);
 bool buildHttpImplementationCommand(Uart* uart, const char* argument);
 bool executeHttpCallCommand(Uart* uart, const char* argument);
 bool connectCommand(Uart* uart, const char* argument);
+bool saveToFileCommand(Uart* uart, const char* argument);

@@ -14,7 +14,7 @@ void uart_terminal_scene_text_input_callback(void* context) {
     //     view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Post);
     //     break;
     case TextInputState_Filename:
-        // Handle filename input completion
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Set_Filename);
         break;
     case TextInputState_Payload:
         // Handle payload input completion
@@ -109,6 +109,16 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
                     '\0'; // Ensure null-termination
                 scene_manager_previous_scene(app->scene_manager);
                 consumed = true;
+            }
+            break;
+        case TextInputState_Filename:
+            if(event.event == AppEvent_Set_Filename) {
+                // Handle Filename input completion
+                strncpy(app->filename, app->text_input_store, sizeof(app->filename) - 1);
+                app->filename[sizeof(app->filename) - 1] = '\0'; // Ensure null-termination
+                app->display_mode = DISPLAY_DOWNLOAD;
+                consumed = true;
+                scene_manager_next_scene(app->scene_manager, Display);
             }
             break;
         // case TextInputState_PostUrl:
