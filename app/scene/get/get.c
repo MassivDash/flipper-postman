@@ -6,11 +6,12 @@
 #include <gui/modules/variable_item_list.h>
 #include "../../csv/csv_get_url/csv_get_url.h"
 
-bool compare_url(const char* url1, const char* url2) {
+bool compare_url(const FuriString* url1, const FuriString* url2) {
     if(url1 == NULL || url2 == NULL) {
         return false;
     }
-    return strcmp(url1, url2) == 0;
+
+    return furi_string_cmp(url1, url2) == 0;
 }
 
 static bool url_in_csv(App* app, const char* url) {
@@ -21,10 +22,13 @@ static bool url_in_csv(App* app, const char* url) {
 
     for(size_t i = 0; i < MAX_URLS; i++) {
         furi_string_set_str(csv_url, app->url_list[i].url);
-        if(compare_url(furi_string_get_cstr(url_str), furi_string_get_cstr(csv_url))) {
+
+        if(compare_url(url_str, csv_url)) {
             url_in_csv = true;
             break;
         }
+
+        furi_string_reset(csv_url);
     }
 
     furi_string_free(url_str);
@@ -128,7 +132,7 @@ void draw_get_menu(App* app) {
             app);
     }
 
-    // // Check if current URL is in the csv list
+    // Check if current URL is in the csv list
     bool url_found = url_in_csv(app, app->get_state->url);
     FURI_LOG_D(TAG, "URL in CSV: %d", url_found);
 
