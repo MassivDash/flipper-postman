@@ -179,7 +179,9 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case GetItemSetUrl:
             if(strcmp(app->get_state->url, "") == 0) {
-                strcpy(app->get_state->url, "https://api.spacexdata.com/v3/missions");
+                strcpy(
+                    app->get_state->url,
+                    "https://i0.wp.com/randomnerdtutorials.com/wp-content/uploads/2022/04/ESP32-URL-Arduino-IDE.png");
             }
             app->selected_tx_string = app->get_state->url;
             app->text_input_state = TextInputState_GetUrl;

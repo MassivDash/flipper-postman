@@ -52,8 +52,6 @@ static int32_t uart_worker(void* context) {
         if(events & WorkerEvtRxDone) {
             size_t len = furi_stream_buffer_receive(uart->rx_stream, uart->rx_buf, RX_BUF_SIZE, 0);
             if(len > 0) {
-                uart->rx_buf[len] = '\0'; // Null-terminate the received data
-
                 if(app->save_to_file && app->filename[0] != '\0') {
                     // Create a FuriString to hold the full path
                     FuriString* full_path = furi_string_alloc();
@@ -81,9 +79,11 @@ static int32_t uart_worker(void* context) {
                     furi_string_free(full_path);
                 } else if(app->full_response) {
                     // Append to text_box_store if full_response is set
+                    uart->rx_buf[len] = '\0'; // Null-terminate the received data
                     furi_string_cat_str(app->text_box_store, (char*)uart->rx_buf);
                 } else {
                     // Accumulate the response
+                    uart->rx_buf[len] = '\0'; // Null-terminate the received data
                     if(response_len + len < sizeof(uart->last_response)) {
                         strncpy(uart->last_response + response_len, (char*)uart->rx_buf, len);
                         response_len += len;
@@ -461,11 +461,11 @@ bool getCommand(Uart* uart, const char* argument) {
 }
 
 bool saveToFileCommand(Uart* uart, const char* argument) {
-    FURI_LOG_D("UART_CMDS", "GET_STREAM: %s\n", argument);
+    FURI_LOG_D("UART_CMDS", "FILE_STREAM: %s\n", argument);
     uart->app->save_to_file = true;
 
     char command[256];
-    snprintf(command, sizeof(command), "GET_STREAM %s\n", argument);
+    snprintf(command, sizeof(command), "FILE_STREAM %s\n", argument);
     if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
         return false;
     }
