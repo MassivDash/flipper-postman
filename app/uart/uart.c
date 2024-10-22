@@ -74,8 +74,6 @@ static int32_t uart_worker(void* context) {
                                 furi_string_cat_str(
                                     app->text_box_store,
                                     "DOWNLOAD_ERROR: Failed to write to file\n");
-                            } else {
-                                
                             }
                             storage_file_close(file);
                         } else {

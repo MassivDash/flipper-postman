@@ -7,6 +7,7 @@
 #include <gui/modules/menu.h>
 #include <gui/modules/popup.h>
 #include <gui/modules/submenu.h>
+#include <gui/view.h>
 #include <gui/scene_manager.h>
 #include <gui/view_dispatcher.h>
 #include <storage/storage.h>
@@ -26,6 +27,7 @@ void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Get);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Display);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Get_Url_List);
+    view_dispatcher_remove_view(app->view_dispatcher, AppView_Download);
     view_dispatcher_free(app->view_dispatcher);
 
     // Memory for the UI
@@ -35,6 +37,7 @@ void app_free(App* app) {
     dialog_ex_free(app->dialog);
     widget_free(app->text_box);
     uart_text_input_free(app->text_input);
+    view_free(app->view);
 
     // Memory for the CSV
     for(int i = 0; i < MAX_URLS; i++) {

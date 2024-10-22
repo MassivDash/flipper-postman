@@ -73,6 +73,9 @@ typedef struct {
     bool full_response; // Flag for attaching full uart response otherwise last line
     DisplayMode display_mode; // Display mode for display view
 
+    // Download view
+    View* view; // View for download progress
+
 } App;
 
 #endif // APP_H

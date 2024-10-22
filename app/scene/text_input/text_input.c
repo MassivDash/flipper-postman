@@ -116,9 +116,8 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
                 // Handle Filename input completion
                 strncpy(app->filename, app->text_input_store, sizeof(app->filename) - 1);
                 app->filename[sizeof(app->filename) - 1] = '\0'; // Ensure null-termination
-                app->display_mode = DISPLAY_DOWNLOAD;
+                scene_manager_next_scene(app->scene_manager, Download);
                 consumed = true;
-                scene_manager_next_scene(app->scene_manager, Display);
             }
             break;
         default:
@@ -132,6 +131,8 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
 void scene_on_exit_text_input(void* context) {
     App* app = context;
     app->is_custom_tx_string = false;
+    app->text_input_store[0] = '\0';
+    // Set selected_tx_string to point to an empty string
     app->selected_tx_string = "";
     uart_text_input_reset(app->text_input);
 }

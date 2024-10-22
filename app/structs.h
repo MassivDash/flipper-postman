@@ -16,6 +16,7 @@ typedef enum {
     Get,
     Display,
     Get_Url_List,
+    Download,
     // Post,
     // Build_http,
     // Download,
@@ -34,9 +35,9 @@ typedef enum {
     AppView_Connect_Favs,
     AppView_Get,
     AppView_Get_Url_List,
+    AppView_Download,
     // AppView_Post,
     // AppView_Build_http,
-    // AppView_Download,
     // AppView_Listen,
     // AppView_About,
     AppView_Display,
@@ -59,6 +60,7 @@ typedef enum {
     AppEvent_Display,
     AppEvent_Get_Url_List,
     AppEvent_Set_Filename,
+    AppEvent_StartDownload
 } AppEvent;
 
 /* main menu scene */
@@ -96,7 +98,7 @@ typedef struct {
     void (*execute)(const char* argument);
 } Command;
 
-#define RX_BUF_SIZE         (1024)
+#define RX_BUF_SIZE         (2048)
 #define MAX_WIFI_NETWORKS   20
 #define MAX_SSID_LENGTH     128
 #define MAX_PASSWORD_LENGTH 128
