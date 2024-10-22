@@ -43,6 +43,7 @@ static int32_t uart_worker(void* context) {
     Uart* uart = (Uart*)context;
     App* app = uart->app; // Assuming uart->app points to the App structure
     size_t response_len = 0;
+    size_t buffer_offset = 0;
 
     while(1) {
         uint32_t events =
@@ -50,43 +51,58 @@ static int32_t uart_worker(void* context) {
         furi_check((events & FuriFlagError) == 0);
         if(events & WorkerEvtStop) break;
         if(events & WorkerEvtRxDone) {
-            size_t len = furi_stream_buffer_receive(uart->rx_stream, uart->rx_buf, RX_BUF_SIZE, 0);
+            size_t len = furi_stream_buffer_receive(
+                uart->rx_stream, uart->rx_buf + buffer_offset, RX_BUF_SIZE - buffer_offset, 0);
             if(len > 0) {
+                buffer_offset += len;
                 if(app->save_to_file && app->filename[0] != '\0') {
-                    // Create a FuriString to hold the full path
-                    FuriString* full_path = furi_string_alloc();
-                    furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), app->filename);
+                    if(buffer_offset >= RX_BUF_SIZE) {
+                        // Create a FuriString to hold the full path
+                        FuriString* full_path = furi_string_alloc();
+                        furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), app->filename);
 
-                    // Stream directly to file if save_to_file is set and filename is not empty
-                    File* file = storage_file_alloc(app->storage);
-                    if(storage_file_open(
-                           file, furi_string_get_cstr(full_path), FSAM_WRITE, FSOM_OPEN_APPEND)) {
-                        if(!storage_file_write(file, uart->rx_buf, len)) {
-                            FURI_LOG_E(TAG, "DOWNLOAD_ERROR: Failed to write to file");
+                        // Stream directly to file if save_to_file is set and filename is not empty
+                        File* file = storage_file_alloc(app->storage);
+                        if(storage_file_open(
+                               file,
+                               furi_string_get_cstr(full_path),
+                               FSAM_WRITE,
+                               FSOM_OPEN_APPEND)) {
+                            if(!storage_file_write(file, uart->rx_buf, buffer_offset)) {
+                                FURI_LOG_E(TAG, "DOWNLOAD_ERROR: Failed to write to file");
+                                // Copy error message to text_box_store
+                                furi_string_cat_str(
+                                    app->text_box_store,
+                                    "DOWNLOAD_ERROR: Failed to write to file\n");
+                            } else {
+                                
+                            }
+                            storage_file_close(file);
+                        } else {
+                            FURI_LOG_E(TAG, "DOWNLOAD_ERROR: Failed to open file for writing");
                             // Copy error message to text_box_store
                             furi_string_cat_str(
-                                app->text_box_store, "DOWNLOAD_ERROR: Failed to write to file\n");
+                                app->text_box_store,
+                                "DOWNLOAD_ERROR: Failed to open file for writing\n");
                         }
-                        storage_file_close(file);
-                    } else {
-                        FURI_LOG_E(TAG, "DOWNLOAD_ERROR: Failed to open file for writing");
-                        // Copy error message to text_box_store
-                        furi_string_cat_str(
-                            app->text_box_store,
-                            "DOWNLOAD_ERROR: Failed to open file for writing\n");
+                        storage_file_free(file);
+                        furi_string_free(full_path);
+                        buffer_offset = 0; // Reset buffer offset after writing to file
                     }
-                    storage_file_free(file);
-                    furi_string_free(full_path);
                 } else if(app->full_response) {
                     // Append to text_box_store if full_response is set
-                    uart->rx_buf[len] = '\0'; // Null-terminate the received data
+                    uart->rx_buf[buffer_offset] = '\0'; // Null-terminate the received data
                     furi_string_cat_str(app->text_box_store, (char*)uart->rx_buf);
+                    buffer_offset = 0; // Reset buffer offset after processing
                 } else {
                     // Accumulate the response
-                    uart->rx_buf[len] = '\0'; // Null-terminate the received data
-                    if(response_len + len < sizeof(uart->last_response)) {
-                        strncpy(uart->last_response + response_len, (char*)uart->rx_buf, len);
-                        response_len += len;
+                    uart->rx_buf[buffer_offset] = '\0'; // Null-terminate the received data
+                    if(response_len + buffer_offset < sizeof(uart->last_response)) {
+                        strncpy(
+                            uart->last_response + response_len,
+                            (char*)uart->rx_buf,
+                            buffer_offset);
+                        response_len += buffer_offset;
                         uart->last_response[response_len] = '\0'; // Ensure null-termination
 
                         // Check if the response contains a newline character
@@ -102,10 +118,39 @@ static int32_t uart_worker(void* context) {
                         response_len = 0; // Reset to avoid overflow
                         uart->last_response[0] = '\0'; // Clear the buffer
                     }
+                    buffer_offset = 0; // Reset buffer offset after processing
                 }
             }
         }
     }
+
+    // Write any remaining data in the buffer to the file
+    if(buffer_offset > 0 && app->save_to_file && app->filename[0] != '\0') {
+        // Create a FuriString to hold the full path
+        FuriString* full_path = furi_string_alloc();
+        furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), app->filename);
+
+        // Stream directly to file if save_to_file is set and filename is not empty
+        File* file = storage_file_alloc(app->storage);
+        if(storage_file_open(file, furi_string_get_cstr(full_path), FSAM_WRITE, FSOM_OPEN_APPEND)) {
+            if(!storage_file_write(file, uart->rx_buf, buffer_offset)) {
+                FURI_LOG_E(TAG, "DOWNLOAD_ERROR: Failed to write remaining data to file");
+                // Copy error message to text_box_store
+                furi_string_cat_str(
+                    app->text_box_store,
+                    "DOWNLOAD_ERROR: Failed to write remaining data to file\n");
+            }
+            storage_file_close(file);
+        } else {
+            FURI_LOG_E(TAG, "DOWNLOAD_ERROR: Failed to open file for writing");
+            // Copy error message to text_box_store
+            furi_string_cat_str(
+                app->text_box_store, "DOWNLOAD_ERROR: Failed to open file for writing\n");
+        }
+        storage_file_free(file);
+        furi_string_free(full_path);
+    }
+
     furi_stream_buffer_free(uart->rx_stream);
     return 0;
 }

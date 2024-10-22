@@ -49,7 +49,6 @@ void app_free(App* app) {
 
     furi_string_free(app->text_box_store);
     furi_timer_free(app->timer);
-
     furi_record_close(RECORD_STORAGE);
     free(app);
 }

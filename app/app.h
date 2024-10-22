@@ -27,9 +27,6 @@
 // TAG for logging
 #define TAG                                 "FLIPPER_POSTMAN"
 
-// After 7k the widget scroll started to be buggy, were not able to scroll to the end
-#define DISPLAY_STORE_SIZE (1024 * 7 - 100) // this seems to be the biggest stable size
-
 typedef struct {
     SceneManager* scene_manager;
     ViewDispatcher* view_dispatcher;

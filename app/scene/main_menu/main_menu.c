@@ -24,6 +24,9 @@ void menu_callback_main_menu(void* context, uint32_t index) {
     case MenuSelection_Connect_Favs:
         scene_manager_handle_custom_event(app->scene_manager, AppEvent_Connect_Favs);
         break;
+    case MenuSelection_Download:
+        scene_manager_handle_custom_event(app->scene_manager, AppEvent_Download);
+        break;
     }
 }
 
@@ -141,6 +144,19 @@ bool scene_on_event_main_menu(void* context, SceneManagerEvent event) {
             consumed = true;
             break;
         case AppEvent_Get:
+            scene_manager_next_scene(app->scene_manager, Get);
+            consumed = true;
+            break;
+        case AppEvent_Download:
+            if(!app->get_state) {
+                app->get_state = malloc(sizeof(GetState));
+                app->get_state->mode = true; // Default mode: Display
+                app->get_state->method = true; // Default method: GET
+                strcpy(app->get_state->url, ""); // Default URL: empty
+            } else {
+                app->get_state->mode = true; // Default mode: Save to file
+                app->get_state->method = true; // Default method: Stream
+            }
             scene_manager_next_scene(app->scene_manager, Get);
             consumed = true;
             break;

@@ -96,6 +96,8 @@ void scene_on_enter_display(void* context) {
         }
         break;
     case DISPLAY_GET:
+        //Reset the text box
+        furi_string_reset(app->text_box_store);
         bool success = getCommand(app->uart, app->get_state->url);
         if(success) {
             FURI_LOG_I(TAG, "Success");
@@ -170,6 +172,8 @@ void scene_on_enter_display(void* context) {
             FURI_LOG_I(TAG, "Download success");
         } else {
             FURI_LOG_E(TAG, "Download failed");
+            // Copy error message to the text_box_store
+            furi_string_set_str(app->text_box_store, "FILE_STREAM_ERROR: Download failed");
         }
         break;
     case DISPLAY_LISTEN:
