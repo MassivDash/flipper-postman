@@ -209,7 +209,7 @@ bool scene_on_event_display(void* context, SceneManagerEvent event) {
     switch(event.type) {
     case(SceneManagerEventTypeBack):
         if(app->display_mode == DISPLAY_DOWNLOAD) {
-            scene_manager_search_and_switch_to_another_scene(app->scene_manager, Get);
+            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Get);
             consumed = true;
         }
         break;
