@@ -194,7 +194,7 @@ void scene_on_exit_display(void* context) {
     FURI_LOG_D(TAG, "scene_on_exit_display");
     widget_reset(app->text_box);
     // Reset the text_box_store
-    app->save_to_file = false;
+
     app->filename[0] = '\0';
     furi_string_reset(app->text_box_store);
     app->display_mode = DISPLAY_NONE;

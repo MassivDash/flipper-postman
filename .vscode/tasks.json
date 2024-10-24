@@ -3,62 +3,113 @@
 // Some paths are absolute, and will need to be updated if you move the project.
 // To regenerate the file, delete it and run `ufbt vscode_dist` again.
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "options": {
-        "env": {
-            "PATH": "${workspaceFolder}:${env:PATH}:/Users/lukasz.celitan/.ufbt/current/scripts/ufbt"
-        }
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "options": {
+    "env": {
+      "PATH": "${workspaceFolder}:${env:PATH}:/Users/lukasz.celitan/.ufbt/current/scripts/ufbt"
+    }
+  },
+  "tasks": [
+    {
+      "label": "Launch App on Flipper",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt launch"
     },
-    "tasks": [
-        {
-            "label": "Launch App on Flipper",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt launch"
-        },
-        {
-            "label": "Build",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt"
-        },
-        {
-            "label": "Clean",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt -c"
-        },
-        {
-            "label": "Flash FW (SWD)",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt FORCE=1 flash"
-        },
-        {
-            "label": "Flash FW (USB, with resources)",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt FORCE=1 flash_usb"
-        },
-        {
-            "label": "Open Flipper CLI session",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt cli"
-        },
-        {
-            "label": "Update uFBT SDK",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt update"
-        },
-        {
-            "label": "Update VSCode config",
-            "group": "build",
-            "type": "shell",
-            "command": "ufbt vscode_dist"
-        }
-    ]
+    {
+      "label": "Build",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt"
+    },
+    {
+      "label": "Clean",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt -c"
+    },
+    {
+      "label": "Flash FW (SWD)",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt FORCE=1 flash"
+    },
+    {
+      "label": "Flash FW (USB, with resources)",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt FORCE=1 flash_usb"
+    },
+    {
+      "label": "Open Flipper CLI session",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt cli"
+    },
+    {
+      "label": "Update uFBT SDK",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt update"
+    },
+    {
+      "label": "Update VSCode config",
+      "group": "build",
+      "type": "shell",
+      "command": "ufbt vscode_dist"
+    },
+    {
+      "label": "Open Screen Session",
+      "type": "shell",
+      "command": "screen",
+      "args": [
+        "/dev/cu.usbmodemflip_R4but1",
+        "-S",
+        "flipper", // Name of the screen session
+        "-dm", // Start screen in detached mode
+        "bash",
+        "-c", // Execute bash commands
+        "'log trace; exec bash'" // Replace 'your_command_here' with the command you want to execute
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    },
+    {
+      "label": "Close Screen Session",
+      "type": "shell",
+      "command": "screen",
+      "args": [
+        "-S",
+        "flipper", // Name of the screen session
+        "-X",
+        "quit" // Command to quit the screen session
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    }
+  ]
 }

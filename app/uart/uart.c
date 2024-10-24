@@ -35,7 +35,7 @@ void uart_terminal_uart_on_irq_cb(
 
     if(event == FuriHalSerialRxEventData) {
         uint8_t data = furi_hal_serial_async_rx(handle);
-        furi_stream_buffer_send(uart->rx_stream, &data, 1, 0);
+        furi_stream_buffer_send(uart->rx_stream, &data, sizeof(data), 0);
         furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
     }
 }
@@ -58,8 +58,7 @@ static void handle_save_to_file(Uart* uart, App* app, size_t* buffer_offset) {
                 // Update download progress
                 static size_t total_written = 0;
                 total_written += *buffer_offset;
-                int progress = total_written;
-                update_download_progress(app, progress);
+                update_download_progress(app, total_written);
             }
             storage_file_close(file);
         } else {
@@ -67,6 +66,8 @@ static void handle_save_to_file(Uart* uart, App* app, size_t* buffer_offset) {
             // Copy error message to text_box_store
             furi_string_cat_str(
                 app->text_box_store, "DOWNLOAD_ERROR: Failed to open file for writing\n");
+            size_t progress = 0;
+            update_download_progress(app, progress);
         }
         storage_file_free(file);
         furi_string_free(full_path);
@@ -135,7 +136,8 @@ static int32_t uart_worker(void* context) {
     if(buffer_offset > 0 && app->save_to_file && app->filename[0] != '\0') {
         handle_save_to_file(uart, app, &buffer_offset);
     }
-
+    furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtStop);
+    furi_stream_buffer_reset(uart->rx_stream);
     furi_stream_buffer_free(uart->rx_stream);
     return 0;
 }
@@ -454,8 +456,8 @@ bool saveToFileCommand(Uart* uart, const char* argument) {
         return false;
     }
 
-    uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 6000);
-    if(events & WorkerEvtRxDone) {
+    uint32_t events = furi_thread_flags_wait(WorkerJobDone, FuriFlagWaitAny, 50000);
+    if(events & WorkerJobDone) {
         // Check if text_box_store is has somewhere "DOWNLOAD_ERROR:"
         bool no_error =
             !strstr(furi_string_get_cstr(uart->app->text_box_store), "DOWNLOAD_ERROR:");
