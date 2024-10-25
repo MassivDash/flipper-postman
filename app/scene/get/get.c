@@ -183,9 +183,7 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
         switch(event.event) {
         case GetItemSetUrl:
             if(strcmp(app->get_state->url, "") == 0) {
-                strcpy(
-                    app->get_state->url,
-                    "https://i0.wp.com/randomnerdtutorials.com/wp-content/uploads/2022/04/ESP32-URL-Arduino-IDE.png");
+                strcpy(app->get_state->url, "https://");
             }
             app->selected_tx_string = app->get_state->url;
             app->text_input_state = TextInputState_GetUrl;
@@ -235,6 +233,7 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
 
             if(app->get_state->mode) {
                 // If save to file mode, move to filename input
+                furi_string_reset(app->text_box_store);
                 app->text_input_state = TextInputState_Filename;
                 scene_manager_next_scene(app->scene_manager, Text_Input);
 

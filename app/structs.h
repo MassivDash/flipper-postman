@@ -90,7 +90,8 @@ typedef enum {
 typedef enum {
     WorkerEvtStop = (1 << 0),
     WorkerEvtRxDone = (1 << 1),
-    WorkerJobDone = (1 << 2),
+    WorkerEvtRxIdle = (1 << 2),
+    WorkerJobDone = (1 << 3),
 } WorkerEvtFlags;
 
 typedef struct {

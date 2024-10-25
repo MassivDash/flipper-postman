@@ -16,6 +16,9 @@ struct Uart {
     void (*handle_rx_data_cb)(uint8_t* buf, size_t len, void* context);
     FuriHalSerialHandle* serial_handle;
     char last_response[2096]; // Buffer to store the last response
+    bool streaming;
+    FuriTimer* timer;
+    size_t bytes_written;
 };
 
 void uart_terminal_uart_set_handle_rx_data_cb(
@@ -25,7 +28,7 @@ void uart_terminal_uart_set_handle_rx_data_cb(
     uart->handle_rx_data_cb = handle_rx_data_cb;
 }
 
-#define WORKER_ALL_RX_EVENTS (WorkerEvtStop | WorkerEvtRxDone)
+#define WORKER_ALL_RX_EVENTS (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtRxIdle)
 
 void uart_terminal_uart_on_irq_cb(
     FuriHalSerialHandle* handle,
@@ -37,6 +40,10 @@ void uart_terminal_uart_on_irq_cb(
         uint8_t data = furi_hal_serial_async_rx(handle);
         furi_stream_buffer_send(uart->rx_stream, &data, sizeof(data), 0);
         furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
+    }
+
+    if(event == FuriHalSerialRxEventIdle) {
+        furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxIdle);
     }
 }
 
@@ -58,6 +65,7 @@ static void handle_save_to_file(Uart* uart, App* app, size_t* buffer_offset) {
                 // Update download progress
                 static size_t total_written = 0;
                 total_written += *buffer_offset;
+                uart->bytes_written = total_written;
                 update_download_progress(app, total_written);
             }
             storage_file_close(file);
@@ -67,6 +75,7 @@ static void handle_save_to_file(Uart* uart, App* app, size_t* buffer_offset) {
             furi_string_cat_str(
                 app->text_box_store, "DOWNLOAD_ERROR: Failed to open file for writing\n");
             size_t progress = 0;
+            uart->bytes_written = 0;
             update_download_progress(app, progress);
         }
         storage_file_free(file);
@@ -112,6 +121,7 @@ static int32_t uart_worker(void* context) {
     size_t buffer_offset = 0;
 
     while(1) {
+        bool save_to_file = app->save_to_file && app->filename[0] != '\0';
         uint32_t events =
             furi_thread_flags_wait(WORKER_ALL_RX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
         furi_check((events & FuriFlagError) == 0);
@@ -121,7 +131,7 @@ static int32_t uart_worker(void* context) {
                 uart->rx_stream, uart->rx_buf + buffer_offset, RX_BUF_SIZE - buffer_offset, 0);
             if(len > 0) {
                 buffer_offset += len;
-                if(app->save_to_file && app->filename[0] != '\0') {
+                if(save_to_file) {
                     handle_save_to_file(uart, app, &buffer_offset);
                 } else if(app->full_response) {
                     handle_full_response(uart, app, &buffer_offset);
@@ -132,7 +142,7 @@ static int32_t uart_worker(void* context) {
         }
     }
 
-    // Write any remaining data in the buffer to the file
+    // // Write any remaining data in the buffer to the file
     if(buffer_offset > 0 && app->save_to_file && app->filename[0] != '\0') {
         handle_save_to_file(uart, app, &buffer_offset);
     }
@@ -160,6 +170,8 @@ Uart* uart_terminal_uart_init(void* context) {
     uart->app = app;
     uart->rx_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
     uart->rx_thread = furi_thread_alloc();
+    uart->streaming = false;
+    uart->bytes_written = 0;
 
     furi_thread_set_name(uart->rx_thread, "UART_TerminalUartRxThread");
     furi_thread_set_stack_size(uart->rx_thread, 2096);
@@ -445,10 +457,18 @@ bool getCommand(Uart* uart, const char* argument) {
 
     return true;
 }
+static void uart_timer_callback(void* context) {
+    UNUSED(context);
+    // This function is called every second by the timer
+    // We don't need to do anything here as the main loop in saveToFileCommand
+    // will check the bytes_written value
+}
 
 bool saveToFileCommand(Uart* uart, const char* argument) {
     FURI_LOG_T(TAG, "FILE_STREAM: %s\n", argument);
     uart->app->save_to_file = true;
+    uart->streaming = false;
+    uart->bytes_written = 0;
 
     char command[256];
     snprintf(command, sizeof(command), "FILE_STREAM %s\n", argument);
@@ -456,35 +476,61 @@ bool saveToFileCommand(Uart* uart, const char* argument) {
         return false;
     }
 
-    uint32_t events = furi_thread_flags_wait(WorkerJobDone, FuriFlagWaitAny, 50000);
-    if(events & WorkerJobDone) {
-        // Check if text_box_store is has somewhere "DOWNLOAD_ERROR:"
-        bool no_error =
-            !strstr(furi_string_get_cstr(uart->app->text_box_store), "DOWNLOAD_ERROR:");
-        FuriString* full_path = furi_string_alloc();
-        furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), uart->app->filename);
-
-        bool file_present =
-            storage_file_exists(uart->app->storage, furi_string_get_cstr(full_path));
-
-        if(no_error && file_present) {
-            //Copy over success message to text_box_store
-            furi_string_set_str(
-                uart->app->text_box_store, "Download successful, file saved to sdcard/app_data/");
-            FuriString* filename_str = furi_string_alloc();
-            furi_string_set_str(filename_str, uart->app->filename);
-            furi_string_cat_str(uart->app->text_box_store, furi_string_get_cstr(filename_str));
-            furi_string_free(filename_str);
-
-            return true;
-        }
-        furi_string_free(full_path);
-        return false;
-    } else {
-        FURI_LOG_E(TAG, "No response received from the board.");
+    uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 5000);
+    if(!(events & WorkerEvtRxDone)) {
+        FURI_LOG_E(TAG, "No initial response received from the board.");
         return false;
     }
-    return false;
+
+    FURI_LOG_D(TAG, "Streaming started");
+    uart->streaming = true;
+
+    FuriTimer* check_timer = furi_timer_alloc(uart_timer_callback, FuriTimerTypePeriodic, uart);
+    furi_timer_start(check_timer, 1000); // Check every 1 second
+
+    size_t last_bytes_written = 0;
+    uint32_t idle_counter = 0;
+
+    while(uart->streaming) {
+        furi_delay_ms(1000); // Wait for 1 second
+
+        if(uart->bytes_written > last_bytes_written) {
+            // Data is still being written
+            last_bytes_written = uart->bytes_written;
+            idle_counter = 0;
+        } else {
+            // No new data written
+            idle_counter++;
+        }
+
+        if(idle_counter >= 3) { // 3 seconds of no new data
+            uart->streaming = false;
+        }
+    }
+
+    furi_timer_stop(check_timer);
+    furi_timer_free(check_timer);
+
+    // Perform file check
+    FuriString* full_path = furi_string_alloc();
+    furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), uart->app->filename);
+
+    bool file_present = storage_file_exists(uart->app->storage, furi_string_get_cstr(full_path));
+    bool no_error = !strstr(furi_string_get_cstr(uart->app->text_box_store), "DOWNLOAD_ERROR:");
+
+    if(no_error && file_present) {
+        furi_string_set_str(uart->app->text_box_store, "saved to sdcard/app_data/");
+        furi_string_cat_str(uart->app->text_box_store, uart->app->filename);
+        FURI_LOG_T(TAG, "TEXT BOX: %s", furi_string_get_cstr(uart->app->text_box_store));
+        update_download_progress(uart->app, uart->bytes_written);
+    } else {
+        furi_string_set_str(uart->app->text_box_store, "failed to write file");
+    }
+
+    furi_string_free(full_path);
+    uart->bytes_written = 0;
+    uart->app->save_to_file = false;
+    return no_error && file_present;
 }
 
 bool postCommand(Uart* uart, const char* argument) {
