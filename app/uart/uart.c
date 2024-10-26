@@ -12,7 +12,8 @@ struct Uart {
     App* app;
     FuriThread* rx_thread;
     FuriStreamBuffer* rx_stream;
-    uint8_t rx_buf[RX_BUF_SIZE + 1];
+    uint8_t rx_buf[RX_BUF_SIZE];
+    size_t rx_buf_index;
     void (*handle_rx_data_cb)(uint8_t* buf, size_t len, void* context);
     FuriHalSerialHandle* serial_handle;
     char last_response[LAST_RESPONSE_SIZE]; // Buffer to store the last response
@@ -38,7 +39,8 @@ void uart_terminal_uart_on_irq_cb(
 
     if(event == FuriHalSerialRxEventData) {
         uint8_t data = furi_hal_serial_async_rx(handle);
-        furi_stream_buffer_send(uart->rx_stream, &data, sizeof(data), 0);
+        //Reset the buffer before calling
+        furi_stream_buffer_send(uart->rx_stream, &data, 1, 0);
         furi_thread_flags_set(furi_thread_get_id(uart->rx_thread), WorkerEvtRxDone);
     }
 
@@ -47,22 +49,20 @@ void uart_terminal_uart_on_irq_cb(
     }
 }
 
-static void handle_save_to_file(Uart* uart, App* app, size_t* len) {
-    if(*len > 0) {
+static void handle_save_to_file(Uart* uart, App* app, size_t len) {
+    if(len > 0) {
         FuriString* full_path = furi_string_alloc();
         furi_string_printf(full_path, "%s/%s", APP_DATA_PATH(""), app->filename);
 
         File* file = storage_file_alloc(app->storage);
         if(storage_file_open(file, furi_string_get_cstr(full_path), FSAM_WRITE, FSOM_OPEN_APPEND)) {
-            if(!storage_file_write(file, uart->rx_buf, *len)) {
+            if(!storage_file_write(file, uart->rx_buf, len)) {
                 FURI_LOG_E(TAG, "DOWNLOAD_ERROR: Failed to write to file");
                 furi_string_cat_str(
                     app->text_box_store, "DOWNLOAD_ERROR: Failed to write to file\n");
             } else {
-                static size_t total_written = 0;
-                total_written += *len;
-                uart->bytes_written = total_written;
-                update_download_progress(app, total_written);
+                uart->bytes_written += len;
+                update_download_progress(app, uart->bytes_written);
             }
             storage_file_close(file);
         } else {
@@ -76,31 +76,36 @@ static void handle_save_to_file(Uart* uart, App* app, size_t* len) {
         furi_string_free(full_path);
     }
 }
-
-static void handle_full_response(Uart* uart, App* app, size_t* len) {
-    uart->rx_buf[*len] = '\0'; // Null-terminate the received data
-    furi_string_cat_str(app->text_box_store, (char*)uart->rx_buf);
+static void handle_full_response(Uart* uart, App* app, size_t len) {
+    if(len > 0) {
+        char temp[RX_BUF_SIZE + 1];
+        size_t copy_len = len > RX_BUF_SIZE ? RX_BUF_SIZE : len;
+        memcpy(temp, uart->rx_buf, copy_len);
+        temp[copy_len] = '\0';
+        furi_string_cat_str(app->text_box_store, temp);
+    }
 }
 
-static void handle_last_response(Uart* uart, App* app, size_t* response_len, size_t* len) {
+static void handle_last_response(Uart* uart, App* app, size_t* response_len, size_t len) {
     UNUSED(app);
-    uart->rx_buf[*len] = '\0'; // Null-terminate the received data
-    if(*response_len + *len < sizeof(uart->last_response)) {
-        strncpy(uart->last_response + *response_len, (char*)uart->rx_buf, *len);
-        *response_len += *len;
-        uart->last_response[*response_len] = '\0'; // Ensure null-termination
+    if(*response_len + len < sizeof(uart->last_response)) {
+        memcpy(uart->last_response + *response_len, uart->rx_buf, len);
+        *response_len += len;
+        uart->last_response[*response_len] = '\0';
 
-        // Check if the response contains a newline character
-        if(strchr(uart->last_response, '\n')) {
+        char* newline = memchr(uart->last_response, '\n', *response_len);
+        if(newline) {
+            size_t line_length = newline - uart->last_response + 1;
             if(uart->handle_rx_data_cb) {
-                uart->handle_rx_data_cb((uint8_t*)uart->last_response, *response_len, uart->app);
+                uart->handle_rx_data_cb((uint8_t*)uart->last_response, line_length, uart->app);
             }
-            *response_len = 0; // Reset for the next response
+            memmove(uart->last_response, newline + 1, *response_len - line_length);
+            *response_len -= line_length;
         }
     } else {
         FURI_LOG_E(TAG, "HTTP_RESPONSE_ERROR: Response buffer overflow.");
-        *response_len = 0; // Reset to avoid overflow
-        uart->last_response[0] = '\0'; // Clear the buffer
+        *response_len = 0;
+        uart->last_response[0] = '\0';
     }
 }
 
@@ -110,21 +115,29 @@ static int32_t uart_worker(void* context) {
     size_t response_len = 0;
 
     while(1) {
-        bool save_to_file = app->save_to_file && app->filename[0] != '\0';
         uint32_t events =
             furi_thread_flags_wait(WORKER_ALL_RX_EVENTS, FuriFlagWaitAny, FuriWaitForever);
         furi_check((events & FuriFlagError) == 0);
         if(events & WorkerEvtStop) break;
         if(events & WorkerEvtRxDone) {
-            size_t len = furi_stream_buffer_receive(uart->rx_stream, uart->rx_buf, RX_BUF_SIZE, 0);
-            if(len > 0) {
+            size_t available = furi_stream_buffer_receive(
+                uart->rx_stream,
+                uart->rx_buf + uart->rx_buf_index,
+                RX_BUF_SIZE - uart->rx_buf_index,
+                0);
+            if(available > 0) {
+                uart->rx_buf_index += available;
+
+                bool save_to_file = app->save_to_file && app->filename[0] != '\0';
                 if(save_to_file) {
-                    handle_save_to_file(uart, app, &len);
+                    handle_save_to_file(uart, app, uart->rx_buf_index);
                 } else if(app->full_response) {
-                    handle_full_response(uart, app, &len);
+                    handle_full_response(uart, app, uart->rx_buf_index);
                 } else {
-                    handle_last_response(uart, app, &response_len, &len);
+                    handle_last_response(uart, app, &response_len, uart->rx_buf_index);
                 }
+
+                uart->rx_buf_index = 0;
             }
         }
     }
@@ -151,7 +164,7 @@ Uart* uart_terminal_uart_init(void* context) {
     Uart* uart = malloc(sizeof(Uart));
 
     uart->app = app;
-    uart->rx_stream = furi_stream_buffer_alloc(RX_BUF_SIZE + 1, 1);
+    uart->rx_stream = furi_stream_buffer_alloc(RX_BUF_SIZE, 1);
     uart->rx_thread = furi_thread_alloc();
     uart->streaming = false;
     uart->bytes_written = 0;
