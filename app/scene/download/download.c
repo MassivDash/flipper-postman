@@ -46,11 +46,11 @@ static void download_progress_draw_callback(Canvas* canvas, void* _model) {
         canvas_draw_str(canvas, 10, 35, furi_string_get_cstr(progress_text));
     }
 
-    if(model->uart_message != NULL && !furi_string_empty(model->uart_message)) {
+    if(model->uart_message != NULL) {
         canvas_set_font(canvas, FontSecondary);
         canvas_set_color(canvas, ColorBlack);
-        canvas_draw_str(canvas, 10, 45, "Download stopped");
-        canvas_draw_str(canvas, 10, 50, furi_string_get_cstr(model->uart_message));
+        // canvas_draw_str(canvas, 10, 45, "Download stopped");
+        canvas_draw_str(canvas, 10, 52, furi_string_get_cstr(model->uart_message));
         furi_string_free(progress_text);
     }
 }
@@ -98,6 +98,7 @@ void scene_on_enter_download_progress(void* context) {
 
 void scene_on_exit_download_progress(void* context) {
     App* app = context;
+
     view_free_model(app->view);
 }
 
