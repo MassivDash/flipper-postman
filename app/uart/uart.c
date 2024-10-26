@@ -62,7 +62,7 @@ static void handle_save_to_file(Uart* uart, App* app, size_t len) {
                     app->text_box_store, "DOWNLOAD_ERROR: Failed to write to file\n");
             } else {
                 uart->bytes_written += len;
-                update_download_progress(app, uart->bytes_written);
+                update_download_progress(app, uart->bytes_written, false);
             }
             storage_file_close(file);
         } else {
@@ -70,7 +70,7 @@ static void handle_save_to_file(Uart* uart, App* app, size_t len) {
             furi_string_cat_str(
                 app->text_box_store, "DOWNLOAD_ERROR: Failed to open file for writing\n");
             uart->bytes_written = 0;
-            update_download_progress(app, 0);
+            update_download_progress(app, 0, true);
         }
         storage_file_free(file);
         furi_string_free(full_path);
@@ -518,7 +518,7 @@ bool saveToFileCommand(Uart* uart, const char* argument) {
         furi_string_set_str(uart->app->text_box_store, "saved to sdcard/app_data/");
         furi_string_cat_str(uart->app->text_box_store, uart->app->filename);
         FURI_LOG_T(TAG, "TEXT BOX: %s", furi_string_get_cstr(uart->app->text_box_store));
-        update_download_progress(uart->app, uart->bytes_written);
+        update_download_progress(uart->app, uart->bytes_written, true);
     } else {
         furi_string_set_str(uart->app->text_box_store, "failed to write file");
     }

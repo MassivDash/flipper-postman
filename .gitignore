@@ -6,3 +6,4 @@ dist/*
 .env
 .ufbt
 .python
+.DS_Store

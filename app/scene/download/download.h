@@ -15,6 +15,6 @@ typedef struct {
 void scene_on_enter_download_progress(void* context);
 void scene_on_exit_download_progress(void* context);
 bool scene_on_event_download_progress(void* context, SceneManagerEvent event);
-void update_download_progress(App* app, size_t progress);
+void update_download_progress(App* app, size_t progress, bool done);
 
 #endif // DOWNLOAD_H
