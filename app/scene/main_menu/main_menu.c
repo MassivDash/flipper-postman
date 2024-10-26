@@ -52,7 +52,7 @@ void scene_on_enter_main_menu(void* context) {
             menu_add_item(
                 app->menu,
                 "Wifi Favs",
-                &A_Connect_14,
+                &A_Bookmark_14,
                 MenuSelection_Connect_Favs,
                 menu_callback_main_menu,
                 app);
