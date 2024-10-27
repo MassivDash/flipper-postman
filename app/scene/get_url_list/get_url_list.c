@@ -40,7 +40,7 @@ void scene_on_enter_get_url_list(void* context) {
 
         // Add URLs to submenu
         for(size_t i = 0; i < MAX_URLS && app->url_list[i].url[0] != '\0'; i++) {
-            char display_name[MAX_URL_LENGTH];
+            char display_name[TEXT_STORE_SIZE];
 
             // Trim URLs
             trim_whitespace(app->url_list[i].url);

@@ -17,7 +17,8 @@ typedef enum {
     Display,
     Get_Url_List,
     Download,
-    // Post,
+    Post,
+    Post_Url_List,
     // Build_http,
     // Download,
     // Listen,
@@ -36,7 +37,7 @@ typedef enum {
     AppView_Get,
     AppView_Get_Url_List,
     AppView_Download,
-    // AppView_Post,
+    AppView_Post,
     // AppView_Build_http,
     // AppView_Listen,
     // AppView_About,
@@ -139,13 +140,16 @@ typedef enum {
 
 #define TEXT_STORE_SIZE 128
 
-// App Views States
+/// App Views States
+// Intro setup state
 
 typedef enum {
     SetupDialogStateWelcome,
     SetupDialogStateChecking,
     SetupDialogStateResult
 } SetupDialogState;
+
+// Custom text input state
 
 typedef enum {
     TextInputState_GetUrl,
@@ -156,10 +160,13 @@ typedef enum {
     TextInputState_Message,
 } TextInputState;
 
+// DISPLAY VIEW
+
 typedef enum {
     DISPLAY_GET,
     DISPLAY_GET_STREAM,
     DISPLAY_POST,
+    DISPLAY_POST_STREAM,
     DISPLAY_BUILD_HTTP,
     DISPLAY_DOWNLOAD,
     DISPLAY_LISTEN,
@@ -167,16 +174,40 @@ typedef enum {
     COUNT
 } DisplayMode;
 
+// GET VIEW
+
 typedef struct {
     bool mode; // Mode: Display or Save
     char url[TEXT_STORE_SIZE]; // URL
     bool method; // Method: GET or GET_STREAM
 } GetState;
 
-#define MAX_URL_LENGTH 256
+typedef struct {
+    char url[TEXT_STORE_SIZE];
+} UrlList;
+
+// POST VIEW
+typedef struct {
+    bool mode; // Mode: Display or Save
+    char url[TEXT_STORE_SIZE]; // URL
+    bool method; // Method: GET or GET_STREAM
+    FuriString* payload; // Payload {body}
+} PostState;
+
+typedef enum {
+    PostItemMode,
+    PostItemMethod,
+    PostItemSetUrl,
+    PostItemSetPayload,
+    PostItemAction,
+    PostItemSaveToCsv,
+    PostItemDeleteFromCsv,
+    PostItemLoadFromCsv,
+} PostItem;
 
 typedef struct {
-    char url[MAX_URL_LENGTH];
-} UrlList;
+    char url[TEXT_STORE_SIZE];
+    FuriString* payload;
+} PostUrlList;
 
 #endif // STRUCTS_H

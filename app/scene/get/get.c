@@ -5,36 +5,7 @@
 #include <furi_hal.h>
 #include <gui/modules/variable_item_list.h>
 #include "../../csv/csv_get_url/csv_get_url.h"
-
-bool compare_url(const FuriString* url1, const FuriString* url2) {
-    if(url1 == NULL || url2 == NULL) {
-        return false;
-    }
-
-    return furi_string_cmp(url1, url2) == 0;
-}
-
-static bool url_in_csv(App* app, const char* url) {
-    FuriString* url_str = furi_string_alloc();
-    furi_string_set_str(url_str, url);
-    FuriString* csv_url = furi_string_alloc();
-    bool url_in_csv = false;
-
-    for(size_t i = 0; i < MAX_URLS; i++) {
-        furi_string_set_str(csv_url, app->url_list[i].url);
-
-        if(compare_url(url_str, csv_url)) {
-            url_in_csv = true;
-            break;
-        }
-
-        furi_string_reset(csv_url);
-    }
-
-    furi_string_free(url_str);
-    furi_string_free(csv_url);
-    return url_in_csv;
-}
+#include "../../csv/csv_utils/csv_utils.h"
 
 static void get_scene_select_callback(void* context, uint32_t index) {
     App* app = context;
@@ -53,7 +24,7 @@ static void get_scene_select_callback(void* context, uint32_t index) {
         view_dispatcher_send_custom_event(app->view_dispatcher, index);
     }
 
-    bool url_found = url_in_csv(app, app->get_state->url);
+    bool url_found = url_in_csv(app, app->get_state->url, StateTypeGet);
 
     if(strlen(app->get_state->url) > 0 && index == 4) {
         if(url_found) {
@@ -133,7 +104,7 @@ void draw_get_menu(App* app) {
     }
 
     // Check if current URL is in the csv list
-    bool url_found = url_in_csv(app, app->get_state->url);
+    bool url_found = url_in_csv(app, app->get_state->url, StateTypeGet);
     FURI_LOG_D(TAG, "URL in CSV: %d", url_found);
 
     //Check if the URL is in the CSV
@@ -168,8 +139,6 @@ void scene_on_enter_get(void* context) {
     variable_item_list_set_enter_callback(variable_item_list, get_scene_select_callback, app);
     draw_get_menu(app);
     variable_item_list_set_selected_item(variable_item_list, 0);
-
-    furi_assert(app->view_dispatcher);
     view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Get);
 }
 

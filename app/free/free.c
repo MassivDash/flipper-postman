@@ -28,6 +28,7 @@ void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Display);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Get_Url_List);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Download);
+    view_dispatcher_remove_view(app->view_dispatcher, AppView_Post);
     view_dispatcher_free(app->view_dispatcher);
 
     // Memory for the UI

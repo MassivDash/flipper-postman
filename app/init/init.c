@@ -3,6 +3,7 @@
 #include "../uart/uart.h"
 #include "app/csv/csv_wifi/csv_wifi.h"
 #include "app/csv/csv_get_url/csv_get_url.h"
+#include "app/csv/csv_post_url/csv_post_url.h"
 
 App* init() {
     FURI_LOG_T(TAG, "Initializing postman flipper app");
@@ -28,10 +29,13 @@ App* init() {
     // Initialize the CSV file for wifi files
     // Sync the CSV networks to app->csv_networks
 
+    /// CSV files init
     init_csv_wifi(app);
-
     // Initialize the CSV file for URLs
     init_csv_get_url(app);
+    // Initialize the CSV file for Post URLs
+    init_csv_post_url(app);
+
     // Initialize the text box for displaying UART responses
     app->text_box_store = furi_string_alloc();
 

@@ -1,5 +1,5 @@
 #include "csv_get_url.h"
-#include "../csv_wifi/csv_wifi.h"
+#include "../csv_utils/csv_utils.h"
 #include <furi.h>
 #include <stdlib.h>
 #include <storage/storage.h>
@@ -18,12 +18,12 @@ bool sync_csv_get_url_to_mem(App* app) {
     size_t url_index = 0;
     while(read_line_from_file(app->file, buffer) && url_index < MAX_URLS) {
         const char* buffer_str = furi_string_get_cstr(buffer);
-        strncpy(app->url_list[url_index++].url, buffer_str, MAX_URL_LENGTH - 1);
+        strncpy(app->url_list[url_index++].url, buffer_str, TEXT_STORE_SIZE - 1);
     }
 
     // Clear remaining entries in the array
     for(size_t i = url_index; i < MAX_URLS; i++) {
-        memset(app->url_list[i].url, 0, MAX_URL_LENGTH);
+        memset(app->url_list[i].url, 0, TEXT_STORE_SIZE);
     }
 
     furi_string_free(buffer);
@@ -68,7 +68,7 @@ bool read_urls_from_csv(App* app) {
     size_t url_index = 0;
     while(read_line_from_file(app->file, buffer) && url_index < MAX_URLS) {
         const char* buffer_str = furi_string_get_cstr(buffer);
-        strncpy(app->url_list[url_index++].url, buffer_str, MAX_URL_LENGTH - 1);
+        strncpy(app->url_list[url_index++].url, buffer_str, TEXT_STORE_SIZE - 1);
     }
 
     furi_string_free(buffer);

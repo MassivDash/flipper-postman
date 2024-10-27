@@ -18,6 +18,8 @@
 #include "./get/get.h" // Get View variable list
 #include "./get_url_list/get_url_list.h" // Get URL list from csv
 
+#include "./post/post.h" // Post View variable list
+
 #include "./download/download.h" // Download progress view
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
@@ -31,7 +33,9 @@ void (*const scene_on_enter_handlers[])(void*) = {
     scene_on_enter_get,
     scene_on_enter_display,
     scene_on_enter_get_url_list,
-    scene_on_enter_download_progress};
+    scene_on_enter_download_progress,
+    scene_on_enter_post,
+};
 
 /** collection of all scene on event handlers - in the same order as their enum
  */
@@ -45,7 +49,8 @@ bool (*const scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     scene_on_event_get,
     scene_on_event_display,
     scene_on_event_get_url_list,
-    scene_on_event_download_progress};
+    scene_on_event_download_progress,
+    scene_on_event_post};
 
 /** collection of all scene on exit handlers - in the same order as their enum
  */
@@ -59,7 +64,8 @@ void (*const scene_on_exit_handlers[])(void*) = {
     scene_on_exit_get,
     scene_on_exit_display,
     scene_on_exit_get_url_list,
-    scene_on_exit_download_progress};
+    scene_on_exit_download_progress,
+    scene_on_exit_post};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {
@@ -160,4 +166,7 @@ void view_dispatcher_init(App* app) {
         app->view_dispatcher, AppView_Get_Url_List, submenu_get_view(app->submenu));
 
     view_dispatcher_add_view(app->view_dispatcher, AppView_Download, app->view);
+
+    view_dispatcher_add_view(
+        app->view_dispatcher, AppView_Post, variable_item_list_get_view(app->variable_item_list));
 }

@@ -4,6 +4,7 @@
 #include <furi.h>
 #include <stdlib.h>
 #include <storage/storage.h>
+#include "../csv_utils/csv_utils.h"
 
 bool init_csv_wifi(App* app) {
     FURI_LOG_T(TAG, "Initializing CSV");
@@ -86,28 +87,6 @@ bool write_wifi_to_csv(App* app, const WifiCredential* wifi) {
     storage_file_close(app->file);
     FURI_LOG_T(TAG, "Done with writing wifi to CSV");
     return true;
-}
-
-bool read_line_from_file(File* file, FuriString* str_result) {
-    FURI_LOG_T(TAG, "Reading line from csv file");
-    furi_string_reset(str_result);
-    uint8_t buffer[1];
-    bool result = false;
-
-    while(true) {
-        size_t read_count = storage_file_read(file, buffer, sizeof(buffer));
-        if(read_count == 0) break;
-        if(buffer[0] == '\n') {
-            result = true;
-            break;
-        } else {
-            furi_string_push_back(str_result, buffer[0]);
-        }
-    }
-
-    furi_string_push_back(str_result, '\0');
-    FURI_LOG_T(TAG, "Done with reading line from csv file");
-    return result;
 }
 
 bool read_wifis_from_csv(App* app, WifiCredential* csv_networks) {
