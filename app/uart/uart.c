@@ -515,12 +515,12 @@ bool saveToFileCommand(Uart* uart, const char* argument) {
     bool no_error = !strstr(furi_string_get_cstr(uart->app->text_box_store), "DOWNLOAD_ERROR:");
 
     if(no_error && file_present) {
-        furi_string_set_str(uart->app->text_box_store, "saved to sdcard/app_data/");
+        furi_string_set_str(uart->app->text_box_store, "/");
         furi_string_cat_str(uart->app->text_box_store, uart->app->filename);
         FURI_LOG_T(TAG, "TEXT BOX: %s", furi_string_get_cstr(uart->app->text_box_store));
         update_download_progress(uart->app, uart->bytes_written, true);
     } else {
-        furi_string_set_str(uart->app->text_box_store, "failed to write file");
+        furi_string_set_str(uart->app->text_box_store, "Failed to save file");
     }
 
     furi_string_free(full_path);
