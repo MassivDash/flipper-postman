@@ -10,14 +10,14 @@ void uart_terminal_scene_text_input_callback(void* context) {
     case TextInputState_WifiPassword:
         view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Input_Text);
         break;
-    // case TextInputState_PostUrl:
-    //     view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Post);
-    //     break;
+    case TextInputState_PostUrl:
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Post);
+        break;
     case TextInputState_Filename:
         view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Set_Filename);
         break;
     case TextInputState_Payload:
-        // Handle payload input completion
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Payload);
         break;
     case TextInputState_Message:
         // Handle message input completion
@@ -117,6 +117,27 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
                 strncpy(app->filename, app->text_input_store, sizeof(app->filename) - 1);
                 app->filename[sizeof(app->filename) - 1] = '\0'; // Ensure null-termination
                 scene_manager_next_scene(app->scene_manager, Download);
+                consumed = true;
+            }
+            break;
+        case TextInputState_PostUrl:
+            if(event.event == AppEvent_Post) {
+                // Handle URL input completion
+                strncpy(
+                    app->post_state->url, app->text_input_store, sizeof(app->post_state->url) - 1);
+                app->post_state->url[sizeof(app->post_state->url) - 1] =
+                    '\0'; // Ensure null-termination
+                scene_manager_previous_scene(app->scene_manager);
+                consumed = true;
+            }
+            break;
+        case TextInputState_Payload:
+            if(event.event == AppEvent_Payload) {
+                // Clear the existing content of the payload FuriString
+                furi_string_reset(app->post_state->payload);
+                // Set the new content from text_input_store
+                furi_string_set_str(app->post_state->payload, app->text_input_store);
+                scene_manager_previous_scene(app->scene_manager);
                 consumed = true;
             }
             break;

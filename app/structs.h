@@ -38,6 +38,7 @@ typedef enum {
     AppView_Get_Url_List,
     AppView_Download,
     AppView_Post,
+    AppView_Post_Url_List,
     // AppView_Build_http,
     // AppView_Listen,
     // AppView_About,
@@ -61,7 +62,9 @@ typedef enum {
     AppEvent_Display,
     AppEvent_Get_Url_List,
     AppEvent_Set_Filename,
-    AppEvent_StartDownload
+    AppEvent_StartDownload,
+    AppEvent_Payload,
+    AppEvent_Post_Url_List
 } AppEvent;
 
 /* main menu scene */

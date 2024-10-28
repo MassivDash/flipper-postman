@@ -13,7 +13,41 @@ static void post_scene_select_callback(void* context, uint32_t index) {
     furi_assert(app->view_dispatcher);
 
     FURI_LOG_D(TAG, "post_scene_select_callback: %ld", index);
-    view_dispatcher_send_custom_event(app->view_dispatcher, index);
+
+    // The first 4 buttons are always there (Mode, Method, Set/Edit URL, Set Payload)
+    if(index <= 3) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, index);
+        return;
+    }
+
+    // Send Request / Save to File
+    if(strlen(app->post_state->url) > 0 && index == 4) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, PostItemAction);
+        return;
+    }
+
+    bool url_found = url_in_csv(app, app->post_state->url, StateTypePost);
+    FURI_LOG_D(TAG, "URL in CSV: %d", url_found);
+    // Save to CSV / Delete from CSV
+    if(strlen(app->post_state->url) > 0 && index == 5) {
+        if(url_found) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, PostItemDeleteFromCsv);
+        } else {
+            view_dispatcher_send_custom_event(app->view_dispatcher, PostItemSaveToCsv);
+        }
+        return;
+    }
+    FURI_LOG_D(TAG, "url in the list: %s", app->post_url_list[0].url);
+    // Load from CSV
+    if(strlen(app->post_url_list[0].url) > 0) {
+        if(!(strlen(app->post_state->url) > 0) && index == 4) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, PostItemLoadFromCsv);
+        }
+
+        if(index == 6) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, PostItemLoadFromCsv);
+        }
+    }
 }
 
 static void post_scene_mode_callback(VariableItem* item) {
@@ -73,7 +107,7 @@ void draw_post_menu(App* app) {
         }
     }
 
-    if(strlen(app->url_list[0].url) > 0) {
+    if(strlen(app->post_url_list[0].url) > 0) {
         item = variable_item_list_add(variable_item_list, "Load from CSV", 0, NULL, app);
     }
 }
@@ -105,7 +139,6 @@ bool scene_on_event_post(void* context, SceneManagerEvent event) {
     App* app = context;
     furi_assert(app);
     bool consumed = false;
-    PostUrlList post_url_list_item;
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
@@ -125,15 +158,17 @@ bool scene_on_event_post(void* context, SceneManagerEvent event) {
             consumed = true;
             break;
         case PostItemSaveToCsv:
-            strncpy(post_url_list_item.url, app->post_state->url, TEXT_STORE_SIZE - 1);
-            post_url_list_item.url[TEXT_STORE_SIZE - 1] = '\0'; // Ensure null-termination
-            post_url_list_item.payload =
+            FURI_LOG_D(TAG, "Save to CSV");
+            PostUrlList post_entry = {0};
+            strncpy(post_entry.url, app->post_state->url, TEXT_STORE_SIZE - 1);
+            post_entry.url[TEXT_STORE_SIZE - 1] = '\0'; // Ensure null-termination
+            post_entry.payload =
                 furi_string_alloc_set(furi_string_get_cstr(app->post_state->payload));
 
-            if(!write_post_url_to_csv(app, &post_url_list_item)) {
+            if(!write_post_url_to_csv(app, &post_entry)) {
                 FURI_LOG_E(TAG, "Failed to write URL to CSV");
             }
-            furi_string_free(post_url_list_item.payload);
+            furi_string_free(post_entry.payload);
             sync_csv_post_url_to_mem(app);
             draw_post_menu(app);
             consumed = true;

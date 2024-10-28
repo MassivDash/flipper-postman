@@ -21,7 +21,7 @@ void submenu_callback_no_url(void* context, uint32_t index) {
     FURI_LOG_T(TAG, "submenu_callback_no_url");
     furi_assert(index);
     App* app = context;
-    scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MainMenu);
+    scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Get);
 }
 
 void scene_on_enter_get_url_list(void* context) {
