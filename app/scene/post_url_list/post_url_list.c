@@ -8,6 +8,8 @@ void submenu_callback_select_post_url(void* context, uint32_t index) {
 
     // Set the selected URL
     strncpy(app->post_state->url, app->post_url_list[index].url, sizeof(app->post_state->url) - 1);
+    app->post_state->payload =
+        furi_string_alloc_set(furi_string_get_cstr(app->post_url_list[index].payload));
 
     // Handle the custom event to move to the URL details scene
     scene_manager_handle_custom_event(app->scene_manager, AppEvent_Post_Url_List);

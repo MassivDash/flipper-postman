@@ -87,7 +87,12 @@ void draw_post_menu(App* app) {
         NULL,
         app);
 
-    item = variable_item_list_add(variable_item_list, "Set Payload", 0, NULL, app);
+    item = variable_item_list_add(
+        variable_item_list,
+        furi_string_empty(app->post_state->payload) ? "Set Payload" : "Edit Payload",
+        0,
+        NULL,
+        app);
 
     if(strlen(app->post_state->url) > 0) {
         item = variable_item_list_add(
@@ -120,12 +125,13 @@ void scene_on_enter_post(void* context) {
     VariableItemList* variable_item_list = app->variable_item_list;
 
     if(!app->post_state) {
+        FURI_LOG_D(TAG, "Allocating post state");
         app->post_state = malloc(sizeof(PostState));
         app->post_state->mode = false;
         app->post_state->method = false;
         strcpy(app->post_state->url, "");
         app->post_state->payload = furi_string_alloc();
-        furi_string_set(app->post_state->payload, "[{}]");
+        furi_string_set(app->post_state->payload, "");
     }
 
     variable_item_list_set_enter_callback(variable_item_list, post_scene_select_callback, app);
@@ -191,6 +197,9 @@ bool scene_on_event_post(void* context, SceneManagerEvent event) {
                 app->text_input_state = TextInputState_Filename;
                 scene_manager_next_scene(app->scene_manager, Text_Input);
             } else {
+                if(app->text_box_store) {
+                    furi_string_reset(app->text_box_store);
+                }
                 app->display_mode = app->post_state->method ? DISPLAY_POST_STREAM : DISPLAY_POST;
                 scene_manager_next_scene(app->scene_manager, Display);
             }
