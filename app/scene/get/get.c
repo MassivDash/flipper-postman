@@ -201,6 +201,8 @@ bool scene_on_event_get(void* context, SceneManagerEvent event) {
             // If mode is save to file, save to file
 
             if(app->get_state->mode) {
+                //Set download for post
+                app->download_mode = DOWNLOAD_GET;
                 // If save to file mode, move to filename input
                 furi_string_reset(app->text_box_store);
                 app->text_input_state = TextInputState_Filename;

@@ -104,12 +104,18 @@ static bool download_progress_input_callback(InputEvent* event, void* context) {
     App* app = context;
     UNUSED(app);
     UNUSED(event);
-
     if(event->key == InputKeyBack || event->key == InputKeyOk) {
-        scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Get);
-        return true;
+        switch(app->download_mode) {
+        case DOWNLOAD_GET:
+            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Get);
+            return true;
+        case DOWNLOAD_POST:
+            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Post);
+            return true;
+        default:
+            break;
+        }
     }
-
     return false;
 }
 
@@ -134,7 +140,19 @@ void scene_on_enter_download_progress(void* context) {
     view_set_input_callback(app->view, download_progress_input_callback);
     view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Download);
     update_download_progress(app, 0, false);
-    bool success_download = saveToFileCommand(app->uart, app->get_state->url);
+
+    bool success_download = false;
+    switch(app->download_mode) {
+    case DOWNLOAD_GET:
+        success_download = saveToFileCommand(app->uart, app->get_state->url);
+        break;
+    case DOWNLOAD_POST:
+        success_download =
+            savePostToFileCommand(app->uart, app->post_state->url, app->post_state->payload);
+    default:
+        break;
+    }
+
     if(success_download) {
         FURI_LOG_I(TAG, "Download success");
 
@@ -146,7 +164,7 @@ void scene_on_enter_download_progress(void* context) {
 
 void scene_on_exit_download_progress(void* context) {
     App* app = context;
-
+    app->download_mode = DOWNLOAD_NONE;
     view_free_model(app->view);
 }
 
@@ -157,8 +175,17 @@ bool scene_on_event_download_progress(void* context, SceneManagerEvent event) {
     bool consumed = false;
     switch(event.type) {
     case(SceneManagerEventTypeBack):
-        scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Get);
-        consumed = false;
+        switch(app->download_mode) {
+        case DOWNLOAD_GET:
+            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Get);
+            consumed = false;
+            break;
+        case DOWNLOAD_POST:
+            scene_manager_search_and_switch_to_previous_scene(app->scene_manager, Post);
+            consumed = false;
+        default:
+            break;
+        }
         break;
     default:
         consumed = false;

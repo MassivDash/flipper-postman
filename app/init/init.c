@@ -38,6 +38,7 @@ App* init() {
 
     // Initialize the text box for displaying UART responses
     app->text_box_store = furi_string_alloc();
+    app->download_mode = DOWNLOAD_NONE; //Setup[ initial download mode
 
     // Initialize the scene manager (GUI)
     scene_manager_init(app);

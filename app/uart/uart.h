@@ -22,6 +22,7 @@ bool disconnectWiFiCommand(Uart* uart, const char* argument);
 bool getCommand(Uart* uart, const char* argument);
 bool getStreamCommand(Uart* uart, const char* argument);
 bool postCommand(Uart* uart, const char* url_argument, FuriString* payload);
+bool savePostToFileCommand(Uart* uart, const char* url_argument, FuriString* payload);
 bool buildHttpMethodCommand(Uart* uart, const char* argument);
 bool buildHttpUrlCommand(Uart* uart, const char* argument);
 bool buildHttpHeaderCommand(Uart* uart, const char* argument);

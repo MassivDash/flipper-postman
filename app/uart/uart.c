@@ -460,14 +460,11 @@ static void uart_timer_callback(void* context) {
     // will check the bytes_written value
 }
 
-bool saveToFileCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "FILE_STREAM: %s\n", argument);
+static bool streamToFile(Uart* uart, const char* command) {
     uart->app->save_to_file = true;
     uart->streaming = false;
     uart->bytes_written = 0;
 
-    char command[256];
-    snprintf(command, sizeof(command), "FILE_STREAM %s\n", argument);
     if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
         return false;
     }
@@ -529,10 +526,29 @@ bool saveToFileCommand(Uart* uart, const char* argument) {
     return no_error && file_present;
 }
 
+bool saveToFileCommand(Uart* uart, const char* argument) {
+    FURI_LOG_T(TAG, "FILE_STREAM: %s\n", argument);
+    char command[256];
+    snprintf(command, sizeof(command), "FILE_STREAM %s\n", argument);
+    return streamToFile(uart, command);
+}
+
+bool savePostToFileCommand(Uart* uart, const char* url_argument, FuriString* payload) {
+    FURI_LOG_T(TAG, "POST_STREAM: %s\n", url_argument);
+    char command[1024]; // Increased size to accommodate payload
+    snprintf(
+        command,
+        sizeof(command),
+        "POST_STREAM %s %s\n",
+        url_argument,
+        furi_string_get_cstr(payload));
+    return streamToFile(uart, command);
+}
+
 bool postCommand(Uart* uart, const char* url_argument, FuriString* payload) {
     FURI_LOG_D("UART_CMDS", "POST %s", url_argument);
 
-    char command[512]; // Increased size to accommodate payload
+    char command[1024]; // Increased size to accommodate payload
 
     // Build the command
     snprintf(

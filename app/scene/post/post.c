@@ -76,9 +76,14 @@ void draw_post_menu(App* app) {
     item = variable_item_list_add(variable_item_list, "Mode", 2, post_scene_mode_callback, app);
     variable_item_set_current_value_text(item, app->post_state->mode ? "Save" : "Display");
 
-    item =
-        variable_item_list_add(variable_item_list, "Method", 2, post_scene_method_callback, app);
-    variable_item_set_current_value_text(item, app->post_state->method ? "Stream" : "Post");
+    if(!app->post_state->mode) {
+        item = variable_item_list_add(
+            variable_item_list, "Method", 2, post_scene_method_callback, app);
+        variable_item_set_current_value_text(item, app->post_state->method ? "Stream" : "Post");
+    } else {
+        item = variable_item_list_add(variable_item_list, "Method", 1, NULL, app);
+        variable_item_set_current_value_text(item, "Stream to file");
+    }
 
     item = variable_item_list_add(
         variable_item_list,
@@ -194,8 +199,9 @@ bool scene_on_event_post(void* context, SceneManagerEvent event) {
         case PostItemAction:
             FURI_LOG_D(TAG, "Action: Moving to display");
             if(app->post_state->mode) {
+                // Set download mode for post
+                app->download_mode = DOWNLOAD_POST;
                 // If save to file mode, move to filename input
-                // furi_string_reset(app->text_box_store);
                 app->text_input_state = TextInputState_Filename;
                 scene_manager_next_scene(app->scene_manager, Text_Input);
             } else {

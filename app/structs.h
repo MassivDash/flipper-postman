@@ -177,6 +177,13 @@ typedef enum {
     COUNT
 } DisplayMode;
 
+typedef enum {
+    DOWNLOAD_NONE,
+    DOWNLOAD_GET,
+    DOWNLOAD_POST,
+    DOWNLOAD_CUSTOM
+} DownloadMode;
+
 // GET VIEW
 
 typedef struct {
