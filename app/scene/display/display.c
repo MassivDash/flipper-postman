@@ -10,6 +10,7 @@ typedef void (*DisplayCallback)(App* app, const char* header);
 void get_the_header(App* app, FuriString* header) {
     DisplayMode mode = app->display_mode;
     GetState* get_state = app->get_state;
+    PostState* post_state = app->post_state;
     furi_string_reset(header);
     switch(mode) {
     case DISPLAY_GET:
@@ -19,7 +20,7 @@ void get_the_header(App* app, FuriString* header) {
         furi_string_printf(header, "Getting Stream: %s", get_state->url);
         break;
     case DISPLAY_POST:
-        furi_string_printf(header, "Posting: %s", get_state->url);
+        furi_string_printf(header, "Posting: %s", post_state->url);
         break;
     case DISPLAY_BUILD_HTTP:
         furi_string_printf(header, "Building HTTP: %s", get_state->url);

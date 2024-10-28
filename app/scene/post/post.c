@@ -192,14 +192,13 @@ bool scene_on_event_post(void* context, SceneManagerEvent event) {
             consumed = true;
             break;
         case PostItemAction:
+            FURI_LOG_D(TAG, "Action: Moving to display");
             if(app->post_state->mode) {
-                furi_string_reset(app->text_box_store);
+                // If save to file mode, move to filename input
+                // furi_string_reset(app->text_box_store);
                 app->text_input_state = TextInputState_Filename;
                 scene_manager_next_scene(app->scene_manager, Text_Input);
             } else {
-                if(app->text_box_store) {
-                    furi_string_reset(app->text_box_store);
-                }
                 app->display_mode = app->post_state->method ? DISPLAY_POST_STREAM : DISPLAY_POST;
                 scene_manager_next_scene(app->scene_manager, Display);
             }
