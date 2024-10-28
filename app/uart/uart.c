@@ -529,14 +529,46 @@ bool saveToFileCommand(Uart* uart, const char* argument) {
     return no_error && file_present;
 }
 
-bool postCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(
-        TAG,
-        "POST: %s\nPayload: <json_payload>\nSTATUS: "
-        "<number>\nRESPONSE:\n<response>\nRESPONSE_END",
-        argument);
+bool postCommand(Uart* uart, const char* url_argument, FuriString* payload) {
+    FURI_LOG_D("UART_CMDS", "POST %s", url_argument);
+
+    char command[512]; // Increased size to accommodate payload
+
+    // Build the command
+    snprintf(
+        command, sizeof(command), "POST %s %s\n", url_argument, furi_string_get_cstr(payload));
+
+    uart->app->full_response = true;
+
     // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
+        return false;
+    }
+
+    // Wait for the response
+    uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 6000);
+    if(events & WorkerEvtRxDone) {
+        if(uart->app->full_response) {
+            // Check if text_box_store is empty or null
+            if(furi_string_size(uart->app->text_box_store) == 0) {
+                // Input error message to text_box_store
+                furi_string_set_str(
+                    uart->app->text_box_store, "POST_ERROR: Failed to send POST request");
+            }
+        }
+    } else {
+        FURI_LOG_E("UART", "No response received from the board.");
+        return false;
+    }
+
+    // Check if there is a response otherwise input error message to text_box_store
+    if(furi_string_size(uart->app->text_box_store) == 0) {
+        FURI_LOG_E(TAG, "POST_ERROR: Failed to send POST request");
+        furi_string_set_str(uart->app->text_box_store, "POST_ERROR: Failed to send POST request");
+        return false;
+    }
+
+    return true;
 }
 
 bool buildHttpMethodCommand(Uart* uart, const char* argument) {
