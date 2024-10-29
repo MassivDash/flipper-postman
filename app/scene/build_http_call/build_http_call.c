@@ -4,6 +4,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/modules/variable_item_list.h>
+#include "../../csv/csv_build_url/csv_build_url.h"
 
 static void build_http_call_select_callback(void* context, uint32_t index) {
     App* app = context;
@@ -12,6 +13,7 @@ static void build_http_call_select_callback(void* context, uint32_t index) {
 
     FURI_LOG_D(TAG, "build_http_call_select_callback: %ld", index);
 
+    // Handle based on the index selected
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
 }
 
@@ -66,7 +68,15 @@ void draw_build_http_call_menu(App* app) {
 
     item = variable_item_list_add(variable_item_list, "Set Payload", 0, NULL, app);
 
-    item = variable_item_list_add(variable_item_list, "Send Request", 0, NULL, app);
+    if(strlen(app->build_http_state->url) > 0) {
+        item = variable_item_list_add(variable_item_list, "Send Request", 0, NULL, app);
+    }
+
+    if(strlen(app->build_http_list[0].url) > 0) {
+        item = variable_item_list_add(variable_item_list, "Load from CSV", 0, NULL, app);
+    }
+
+    item = variable_item_list_add(variable_item_list, "Save to CSV", 0, NULL, app);
 }
 
 void scene_on_enter_build_http_call(void* context) {
@@ -115,8 +125,36 @@ bool scene_on_event_build_http_call(void* context, SceneManagerEvent event) {
             break;
         case 7: // Send Request
             // Implement the logic to send the HTTP request
-            // This could involve switching to a new scene or calling a function to handle the request
             consumed = true;
+            break;
+        case 8: // Save to CSV
+            FURI_LOG_D(TAG, "Saving to CSV");
+            BuildHttpList build_http_entry = {0};
+            strncpy(build_http_entry.url, app->build_http_state->url, TEXT_STORE_SIZE - 1);
+            build_http_entry.url[TEXT_STORE_SIZE - 1] = '\0';
+            build_http_entry.mode = app->build_http_state->mode;
+            build_http_entry.http_method = app->build_http_state->http_method;
+            memcpy(
+                build_http_entry.headers,
+                app->build_http_state->headers,
+                sizeof(HttpBuildHeader) * MAX_HEADERS);
+            build_http_entry.payload =
+                furi_string_alloc_set(furi_string_get_cstr(app->build_http_state->payload));
+            build_http_entry.show_response_headers = app->build_http_state->show_response_headers;
+
+            if(!write_build_http_to_csv(app, &build_http_entry)) {
+                FURI_LOG_E(TAG, "Failed to write HTTP call to CSV");
+            }
+            furi_string_free(build_http_entry.payload);
+            // sync_csv_build_http_to_mem(app);
+            draw_build_http_call_menu(app);
+            consumed = true;
+            break;
+        case 9: // Load from CSV
+            if(strlen(app->build_http_list[0].url) > 0) {
+                scene_manager_next_scene(app->scene_manager, Build_Http_Url_List);
+                consumed = true;
+            }
             break;
         default:
             consumed = false;

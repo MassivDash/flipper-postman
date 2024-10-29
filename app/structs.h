@@ -4,6 +4,12 @@
 
 #include <furi.h>
 
+#define KEY_NAME_SIZE                       22
+#define TEXT_STORE_SIZE                     256
+#define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
+#define MAX_URLS                            10
+#define MAX_URLS_BUILD_HTTP                 5
+
 /** all scenes */
 
 typedef enum {
@@ -20,6 +26,7 @@ typedef enum {
     Post,
     Post_Url_List,
     Build_Http,
+    Build_Http_Url_List,
     Build_Http_Headers,
     // Listen,
     // About,
@@ -141,8 +148,6 @@ typedef enum {
     Details_Exit
 } Connect_DetailsActionMenu;
 
-#define TEXT_STORE_SIZE 128
-
 /// App Views States
 // Intro setup state
 
@@ -239,8 +244,9 @@ typedef enum {
 } HttpBuildMethod;
 
 // Build Http call State
-#define MAX_HEADERS 10
+#define MAX_HEADERS 5
 
+// Build Http State
 typedef struct {
     bool mode; // Mode: Display or Save
     char url[TEXT_STORE_SIZE]; // URL
@@ -250,5 +256,14 @@ typedef struct {
     FuriString* payload; // Payload {body}
     bool show_response_headers;
 } BuildHttpState;
+
+typedef struct {
+    char url[TEXT_STORE_SIZE];
+    bool mode;
+    HttpBuildMethod http_method;
+    HttpBuildHeader headers[MAX_HEADERS];
+    FuriString* payload;
+    bool show_response_headers;
+} BuildHttpList;
 
 #endif // STRUCTS_H

@@ -20,12 +20,8 @@
 // CSV STORAGE
 #include <storage/storage.h>
 
-#define KEY_NAME_SIZE                       22
-#define TEXT_STORE_SIZE                     128
-#define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
-#define MAX_URLS                            50
 // TAG for logging
-#define TAG                                 "FLIPPER_POSTMAN"
+#define TAG "FLIPPER_POSTMAN"
 
 typedef struct {
     SceneManager* scene_manager;
@@ -82,7 +78,8 @@ typedef struct {
     View* view; // View for download progress
 
     //Build Http View
-    BuildHttpState* build_http_state; // Custom config call
+    BuildHttpState* build_http_state; // Build http (custom config) call
+    BuildHttpList build_http_list[MAX_URLS_BUILD_HTTP]; // Build http csv store
 } App;
 
 #endif // APP_H

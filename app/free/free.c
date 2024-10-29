@@ -41,12 +41,18 @@ void app_free(App* app) {
     uart_text_input_free(app->text_input);
     view_free(app->view);
 
-    // Memory for the CSV
+    // Memory clear for the GET CSV imported items
     for(int i = 0; i < MAX_URLS; i++) {
         free(app->url_list[i].url); // Free dynamically allocated memory within each UrlList
     }
 
-    // Memory for the WiFi networks
+    // Memory clear for the Post CSV imported items
+    for(int i = 0; i < MAX_URLS; i++) {
+        free(
+            app->post_url_list[i].url); // Free dynamically allocated memory within each PostUrlList
+    }
+
+    // Memory clear for the WiFi Networks CSV imported items
     for(int i = 0; i < MAX_WIFI_NETWORKS; i++) {
         free(app->csv_networks[i].ssid); // Free dynamically allocated memory for ssid
         free(app->csv_networks[i].password); // Free dynamically allocated memory for password
