@@ -5,7 +5,8 @@
 
 typedef enum {
     StateTypeGet,
-    StateTypePost
+    StateTypePost,
+    StateTypeBuildHttp,
 } StateType;
 
 /**

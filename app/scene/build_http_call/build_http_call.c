@@ -4,6 +4,7 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/modules/variable_item_list.h>
+#include "../../csv/csv_utils/csv_utils.h"
 #include "../../csv/csv_build_url/csv_build_url.h"
 
 static void build_http_call_select_callback(void* context, uint32_t index) {
@@ -47,36 +48,52 @@ void draw_build_http_call_menu(App* app) {
 
     VariableItem* item;
 
+    // Mode selection: Display / Save to file
     const char* mode_names[] = {"Display", "Save"};
     item =
         variable_item_list_add(variable_item_list, "Mode", 2, build_http_call_mode_callback, app);
     variable_item_set_current_value_text(item, mode_names[app->build_http_state->mode]);
 
+    // Http Method Selection
     const char* method_names[] = {"HEAD", "GET", "POST", "PATCH", "PUT", "DELETE"};
     item = variable_item_list_add(
         variable_item_list, "HTTP Method", 6, build_http_call_method_callback, app);
     variable_item_set_current_value_text(item, method_names[app->build_http_state->http_method]);
 
-    item = variable_item_list_add(variable_item_list, "Set URL", 0, NULL, app);
-
-    item = variable_item_list_add(variable_item_list, "Set Headers", 0, NULL, app);
-
+    // Show response headers switch
     item = variable_item_list_add(
         variable_item_list, "Show Response Headers", 2, build_http_call_show_headers_callback, app);
     variable_item_set_current_value_text(
         item, app->build_http_state->show_response_headers ? "On" : "Off");
 
+    // Set URL button
+    item = variable_item_list_add(variable_item_list, "Set URL", 0, NULL, app);
+
+    // Set Headers button
+    item = variable_item_list_add(variable_item_list, "Set Headers", 0, NULL, app);
+
+    // Set Payload button
     item = variable_item_list_add(variable_item_list, "Set Payload", 0, NULL, app);
 
+    // Send request button (show if url is not empty)
     if(strlen(app->build_http_state->url) > 0) {
-        item = variable_item_list_add(variable_item_list, "Send Request", 0, NULL, app);
+        item = variable_item_list_add(
+            variable_item_list,
+            app->build_http_state->mode ? "Save to File" : "Send Request",
+            0,
+            NULL,
+            app);
     }
 
+    bool url_found = url_in_csv(app, app->build_http_list->url, StateTypeBuildHttp);
+
+    if(strlen(app->build_http_state->url) > 0) {
+        item = variable_item_list_add(
+            variable_item_list, url_found ? "Delete from CSV" : "Save to CSV", 0, NULL, app);
+    }
     if(strlen(app->build_http_list[0].url) > 0) {
         item = variable_item_list_add(variable_item_list, "Load from CSV", 0, NULL, app);
     }
-
-    item = variable_item_list_add(variable_item_list, "Save to CSV", 0, NULL, app);
 }
 
 void scene_on_enter_build_http_call(void* context) {

@@ -109,11 +109,8 @@ void draw_get_menu(App* app) {
 
     //Check if the URL is in the CSV
     if(strlen(app->get_state->url) > 0) {
-        if(url_found) {
-            item = variable_item_list_add(variable_item_list, "Delete from CSV", 0, NULL, app);
-        } else {
-            item = variable_item_list_add(variable_item_list, "Save to CSV", 0, NULL, app);
-        }
+        item = variable_item_list_add(
+            variable_item_list, url_found ? "Delete from CSV" : "Save to CSV", 0, NULL, app);
     }
 
     if(strlen(app->url_list[0].url) > 0) {

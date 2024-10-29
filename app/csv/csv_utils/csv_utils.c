@@ -41,10 +41,16 @@ bool url_in_csv(App* app, const char* url, StateType state_type) {
     size_t max_urls = MAX_URLS;
 
     for(size_t i = 0; i < max_urls; i++) {
-        if(state_type == StateTypeGet) {
+        switch(state_type) {
+        case StateTypeGet:
             furi_string_set_str(csv_url, app->url_list[i].url);
-        } else {
+            break;
+        case StateTypePost:
             furi_string_set_str(csv_url, app->post_url_list[i].url);
+            break;
+        case StateTypeBuildHttp:
+            furi_string_set_str(csv_url, app->build_http_list[i].url);
+            break;
         }
 
         if(compare_url(url_str, csv_url)) {
