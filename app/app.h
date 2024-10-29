@@ -81,6 +81,8 @@ typedef struct {
     // Download view
     View* view; // View for download progress
 
+    //Build Http View
+    BuildHttpState* build_http_state; // Custom config call
 } App;
 
 #endif // APP_H

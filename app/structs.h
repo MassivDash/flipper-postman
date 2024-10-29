@@ -19,8 +19,8 @@ typedef enum {
     Download,
     Post,
     Post_Url_List,
-    // Build_http,
-    // Download,
+    Build_Http,
+    Build_Http_Headers,
     // Listen,
     // About,
     Count
@@ -39,7 +39,7 @@ typedef enum {
     AppView_Download,
     AppView_Post,
     AppView_Post_Url_List,
-    // AppView_Build_http,
+    AppView_BuildHttpCall,
     // AppView_Listen,
     // AppView_About,
     AppView_Display,
@@ -55,7 +55,7 @@ typedef enum {
     AppEvent_Connect_Favs,
     AppEvent_Get,
     AppEvent_Post,
-    AppEvent_Build_http,
+    AppEvent_Build_Http,
     AppEvent_Download,
     AppEvent_Listen,
     AppEvent_About,
@@ -160,6 +160,8 @@ typedef enum {
     TextInputState_PostUrl,
     TextInputState_Filename,
     TextInputState_Payload,
+    TextInputState_BuildHttpUrl,
+    TextInputState_BuildHttpPayload,
     TextInputState_Message,
 } TextInputState;
 
@@ -219,5 +221,34 @@ typedef struct {
     char url[TEXT_STORE_SIZE];
     FuriString* payload;
 } PostUrlList;
+
+// Build Http call view
+
+typedef struct {
+    char key[TEXT_STORE_SIZE];
+    char value[TEXT_STORE_SIZE];
+} HttpBuildHeader;
+
+typedef enum {
+    HEAD,
+    GET,
+    POST,
+    PATCH,
+    PUT,
+    DELETE
+} HttpBuildMethod;
+
+// Build Http call State
+#define MAX_HEADERS 10
+
+typedef struct {
+    bool mode; // Mode: Display or Save
+    char url[TEXT_STORE_SIZE]; // URL
+    bool method; // Method: GET or GET_STREAM
+    HttpBuildMethod http_method; // HEAD, GET, POST, PATCH, PUT, DELETE
+    HttpBuildHeader headers[MAX_HEADERS];
+    FuriString* payload; // Payload {body}
+    bool show_response_headers;
+} BuildHttpState;
 
 #endif // STRUCTS_H

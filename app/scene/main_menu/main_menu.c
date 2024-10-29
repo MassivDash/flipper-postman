@@ -30,10 +30,10 @@ void menu_callback_main_menu(void* context, uint32_t index) {
     case MenuSelection_Download:
         scene_manager_handle_custom_event(app->scene_manager, AppEvent_Download);
         break;
+    case MenuSelection_Build_http:
+        scene_manager_handle_custom_event(app->scene_manager, AppEvent_Build_Http);
     }
 }
-
-// if app->csv_networks is not empty, add the menu item for favs
 
 void scene_on_enter_main_menu(void* context) {
     FURI_LOG_T(TAG, "scene_on_enter_main_menu");
@@ -123,7 +123,6 @@ bool scene_on_event_main_menu(void* context, SceneManagerEvent event) {
     FURI_LOG_D("DEBUG", "Connected to: %s", app->wifi_list.connected_ssid);
     switch(event.type) {
     case(SceneManagerEventTypeBack):
-
         scene_manager_stop(app->scene_manager);
         view_dispatcher_stop(app->view_dispatcher);
         consumed = true;
@@ -167,6 +166,9 @@ bool scene_on_event_main_menu(void* context, SceneManagerEvent event) {
             scene_manager_next_scene(app->scene_manager, Get);
             consumed = true;
             break;
+        case AppEvent_Build_Http:
+            scene_manager_next_scene(app->scene_manager, Build_Http);
+            consumed = true;
         }
         break;
     default: // eg. SceneManagerEventTypeBack, SceneManagerEventTypeTick

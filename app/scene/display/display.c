@@ -48,9 +48,9 @@ typedef enum {
     METHOD_GET_STREAM,
     METHOD_POST,
     METHOD_POST_STREAM
-} HttpMethod;
+} HttpDisplayMethod;
 
-bool sendHttpRequest(App* app, HttpMethod method, const char* url, FuriString* payload) {
+bool sendHttpRequest(App* app, HttpDisplayMethod method, const char* url, FuriString* payload) {
     char command[512];
     const char* method_str;
 
@@ -124,7 +124,7 @@ bool sendHttpRequest(App* app, HttpMethod method, const char* url, FuriString* p
     return true;
 }
 
-void processHttpResponse(App* app, HttpMethod method) {
+void processHttpResponse(App* app, HttpDisplayMethod method) {
     FuriString* status_line = furi_string_alloc();
     if(extract_status_line(app, status_line)) {
         FURI_LOG_I(TAG, "Status line: %s", furi_string_get_cstr(status_line));
@@ -183,7 +183,7 @@ void scene_on_enter_display(void* context) {
 
     view_dispatcher_switch_to_view(app->view_dispatcher, AppView_Display);
 
-    HttpMethod method;
+    HttpDisplayMethod method;
     bool success = false;
 
     switch(app->display_mode) {
@@ -204,12 +204,10 @@ void scene_on_enter_display(void* context) {
         method = METHOD_POST_STREAM;
         success = sendHttpRequest(app, method, app->post_state->url, app->post_state->payload);
         break;
-    // ... other cases ...
     default:
         FURI_LOG_E(TAG, "Unknown display mode");
         break;
     }
-
     if(success) {
         processHttpResponse(app, method);
     } else {

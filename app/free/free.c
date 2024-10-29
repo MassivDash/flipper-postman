@@ -30,6 +30,7 @@ void app_free(App* app) {
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Download);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Post);
     view_dispatcher_remove_view(app->view_dispatcher, AppView_Post_Url_List);
+    view_dispatcher_remove_view(app->view_dispatcher, AppView_BuildHttpCall);
 
     // Memory for the UI
     menu_free(app->menu);
