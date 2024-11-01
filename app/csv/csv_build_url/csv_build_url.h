@@ -6,6 +6,6 @@
 bool init_csv_build_http(App* app);
 bool sync_csv_build_http_to_mem(App* app);
 bool delete_build_http_from_csv(App* app, const char* url);
-bool write_build_http_to_csv(App* app, const BuildHttpList* item);
+bool write_build_http_to_csv(App* app, const BuildHttpList* item, bool has_headers);
 
 #endif // CSV_BUILD_URL_H

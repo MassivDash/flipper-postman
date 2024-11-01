@@ -39,6 +39,9 @@ bool url_in_csv(App* app, const char* url, StateType state_type) {
     bool url_in_csv = false;
 
     size_t max_urls = MAX_URLS;
+    if(state_type == StateTypeBuildHttp) {
+        max_urls = MAX_URLS_BUILD_HTTP;
+    }
 
     for(size_t i = 0; i < max_urls; i++) {
         switch(state_type) {
@@ -53,6 +56,8 @@ bool url_in_csv(App* app, const char* url, StateType state_type) {
             break;
         }
 
+        FURI_LOG_D(
+            TAG, "str1 %s, str2 %s", furi_string_get_cstr(url_str), furi_string_get_cstr(csv_url));
         if(compare_url(url_str, csv_url)) {
             url_in_csv = true;
             break;

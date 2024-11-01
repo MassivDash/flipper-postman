@@ -19,6 +19,12 @@ void uart_terminal_scene_text_input_callback(void* context) {
     case TextInputState_Payload:
         view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Payload);
         break;
+    case TextInputState_BuildHttpUrl:
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Build_Http_Url);
+        break;
+    case TextInputState_BuildHttpPayload:
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_Build_Http_Payload);
+        break;
     case TextInputState_Message:
         // Handle message input completion
         break;
@@ -56,10 +62,16 @@ void scene_on_enter_text_input(void* context) {
     case TextInputState_PostUrl:
         header_text = "Enter Post URL";
         break;
+    case TextInputState_BuildHttpUrl:
+        header_text = "Enter URL";
+        break;
     case TextInputState_Filename:
         header_text = "Enter Filename";
         break;
     case TextInputState_Payload:
+        header_text = "Enter Payload";
+        break;
+    case TextInputState_BuildHttpPayload:
         header_text = "Enter Payload";
         break;
     case TextInputState_Message:
@@ -137,6 +149,29 @@ bool scene_on_event_text_input(void* context, SceneManagerEvent event) {
                 furi_string_reset(app->post_state->payload);
                 // Set the new content from text_input_store
                 furi_string_set_str(app->post_state->payload, app->text_input_store);
+                scene_manager_previous_scene(app->scene_manager);
+                consumed = true;
+            }
+            break;
+        case TextInputState_BuildHttpUrl:
+            if(event.event == AppEvent_Build_Http_Url) {
+                // Handle URL input completion
+                strncpy(
+                    app->build_http_state->url,
+                    app->text_input_store,
+                    sizeof(app->build_http_state->url) - 1);
+                app->build_http_state->url[sizeof(app->build_http_state->url) - 1] =
+                    '\0'; // Ensure null-termination
+                scene_manager_previous_scene(app->scene_manager);
+                consumed = true;
+            }
+            break;
+        case TextInputState_BuildHttpPayload:
+            if(event.event == AppEvent_Build_Http_Payload) {
+                // Clear the existing content of the payload FuriString
+                furi_string_reset(app->build_http_state->payload);
+                // Set the new content from text_input_store
+                furi_string_set_str(app->build_http_state->payload, app->text_input_store);
                 scene_manager_previous_scene(app->scene_manager);
                 consumed = true;
             }

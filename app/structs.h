@@ -47,6 +47,7 @@ typedef enum {
     AppView_Post,
     AppView_Post_Url_List,
     AppView_BuildHttpCall,
+    AppView_BuildHttp_Url_List,
     // AppView_Listen,
     // AppView_About,
     AppView_Display,
@@ -63,6 +64,9 @@ typedef enum {
     AppEvent_Get,
     AppEvent_Post,
     AppEvent_Build_Http,
+    AppEvent_Build_Http_Url,
+    AppEvent_Build_Http_Payload,
+    AppEvent_Build_Http_Url_List,
     AppEvent_Download,
     AppEvent_Listen,
     AppEvent_About,
@@ -167,6 +171,8 @@ typedef enum {
     TextInputState_Payload,
     TextInputState_BuildHttpUrl,
     TextInputState_BuildHttpPayload,
+    TextInputState_BuildHttpHeaderKey,
+    TextInputState_BuildHttpHeaderValue,
     TextInputState_Message,
 } TextInputState;
 
@@ -256,6 +262,19 @@ typedef struct {
     FuriString* payload; // Payload {body}
     bool show_response_headers;
 } BuildHttpState;
+
+typedef enum {
+    BuildHttpItemMode,
+    BuildHttpItemMethod,
+    BuildHttpItemShowHeaders,
+    BuildHttpItemSetUrl,
+    BuildHttpItemSetHeaders,
+    BuildHttpItemSetPayload,
+    BuildHttpItemAction,
+    BuildHttpItemSaveToCsv,
+    BuildHttpItemDeleteFromCsv,
+    BuildHttpItemLoadFromCsv
+} BuildHttpItem;
 
 typedef struct {
     char url[TEXT_STORE_SIZE];

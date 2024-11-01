@@ -11,8 +11,45 @@ static void build_http_call_select_callback(void* context, uint32_t index) {
     App* app = context;
     furi_assert(app);
     furi_assert(app->view_dispatcher);
+    bool url_found = url_in_csv(app, app->build_http_state->url, StateTypeBuildHttp);
 
-    FURI_LOG_D(TAG, "build_http_call_select_callback: %ld", index);
+    switch(index) {
+    case 0: // Mode: Display / Save to file
+        view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemMode);
+        break;
+    case 1: // Method: Get / Head / etc ...
+        view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemMethod);
+        break;
+    case 2: // Show response headers
+        view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemShowHeaders);
+        break;
+    case 3: // Set Url
+        view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemSetUrl);
+        break;
+    case 4: // Set headers
+        view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemSetHeaders);
+        break;
+    case 5: // Set Payload
+        view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemSetPayload);
+        break;
+    case 6: // This will be either action or load from csv
+        if(strlen(app->build_http_state->url) > 0) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemAction);
+        } else {
+            view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemLoadFromCsv);
+        }
+        break;
+    case 7:
+        if(url_found) {
+            view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemDeleteFromCsv);
+        } else {
+            view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemSaveToCsv);
+        }
+        break;
+    case 8:
+        view_dispatcher_send_custom_event(app->view_dispatcher, BuildHttpItemLoadFromCsv);
+        break;
+    }
 
     // Handle based on the index selected
     view_dispatcher_send_custom_event(app->view_dispatcher, index);
@@ -48,6 +85,11 @@ void draw_build_http_call_menu(App* app) {
 
     VariableItem* item;
 
+    bool url_set = strlen(app->build_http_state->url) > 0;
+    bool payload_set = !furi_string_empty(app->build_http_state->payload);
+    bool url_found = url_in_csv(app, app->build_http_state->url, StateTypeBuildHttp);
+
+    FURI_LOG_T(TAG, "URL found %d", url_found);
     // Mode selection: Display / Save to file
     const char* mode_names[] = {"Display", "Save"};
     item =
@@ -67,16 +109,18 @@ void draw_build_http_call_menu(App* app) {
         item, app->build_http_state->show_response_headers ? "On" : "Off");
 
     // Set URL button
-    item = variable_item_list_add(variable_item_list, "Set URL", 0, NULL, app);
+    item =
+        variable_item_list_add(variable_item_list, url_set ? "Edit Url" : "Set URL", 0, NULL, app);
 
     // Set Headers button
     item = variable_item_list_add(variable_item_list, "Set Headers", 0, NULL, app);
 
     // Set Payload button
-    item = variable_item_list_add(variable_item_list, "Set Payload", 0, NULL, app);
+    item = variable_item_list_add(
+        variable_item_list, payload_set ? "Edit Payload" : "Set Payload", 0, NULL, app);
 
     // Send request button (show if url is not empty)
-    if(strlen(app->build_http_state->url) > 0) {
+    if(url_set) {
         item = variable_item_list_add(
             variable_item_list,
             app->build_http_state->mode ? "Save to File" : "Send Request",
@@ -85,9 +129,7 @@ void draw_build_http_call_menu(App* app) {
             app);
     }
 
-    bool url_found = url_in_csv(app, app->build_http_list->url, StateTypeBuildHttp);
-
-    if(strlen(app->build_http_state->url) > 0) {
+    if(url_set) {
         item = variable_item_list_add(
             variable_item_list, url_found ? "Delete from CSV" : "Save to CSV", 0, NULL, app);
     }
@@ -124,50 +166,82 @@ bool scene_on_event_build_http_call(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         switch(event.event) {
-        case 3: // Set URL
+        case BuildHttpItemSetUrl: // Set URL
             app->selected_tx_string = app->build_http_state->url;
             app->text_input_state = TextInputState_BuildHttpUrl;
             scene_manager_next_scene(app->scene_manager, Text_Input);
             consumed = true;
             break;
-        case 4: // Set Headers
+        case BuildHttpItemSetHeaders: // Set Headers
             scene_manager_next_scene(app->scene_manager, Build_Http_Headers);
             consumed = true;
             break;
-        case 6: // Set Payload
+        case BuildHttpItemSetPayload: // Set Payload
             app->selected_tx_string = furi_string_get_cstr(app->build_http_state->payload);
             app->text_input_state = TextInputState_BuildHttpPayload;
             scene_manager_next_scene(app->scene_manager, Text_Input);
             consumed = true;
             break;
-        case 7: // Send Request
+        case BuildHttpItemAction: // Send Request
             // Implement the logic to send the HTTP request
             consumed = true;
             break;
-        case 8: // Save to CSV
-            FURI_LOG_D(TAG, "Saving to CSV");
-            BuildHttpList build_http_entry = {0};
-            strncpy(build_http_entry.url, app->build_http_state->url, TEXT_STORE_SIZE - 1);
-            build_http_entry.url[TEXT_STORE_SIZE - 1] = '\0';
-            build_http_entry.mode = app->build_http_state->mode;
-            build_http_entry.http_method = app->build_http_state->http_method;
-            memcpy(
-                build_http_entry.headers,
-                app->build_http_state->headers,
-                sizeof(HttpBuildHeader) * MAX_HEADERS);
-            build_http_entry.payload =
-                furi_string_alloc_set(furi_string_get_cstr(app->build_http_state->payload));
-            build_http_entry.show_response_headers = app->build_http_state->show_response_headers;
+        case BuildHttpItemSaveToCsv: // Save to CSV
+            FURI_LOG_T(TAG, "Saving to CSV");
+            {
+                BuildHttpList build_http_entry;
+                memset(&build_http_entry, 0, sizeof(BuildHttpList));
 
-            if(!write_build_http_to_csv(app, &build_http_entry)) {
-                FURI_LOG_E(TAG, "Failed to write HTTP call to CSV");
+                strncpy(build_http_entry.url, app->build_http_state->url, TEXT_STORE_SIZE - 1);
+                build_http_entry.url[TEXT_STORE_SIZE - 1] = '\0';
+                build_http_entry.mode = app->build_http_state->mode;
+                build_http_entry.http_method = app->build_http_state->http_method;
+
+                // Copy headers, only if they exist
+                bool has_headers = false;
+                for(int i = 0; i < MAX_HEADERS; i++) {
+                    if(app->build_http_state->headers[i].key[0] != '\0') {
+                        strncpy(
+                            build_http_entry.headers[i].key,
+                            app->build_http_state->headers[i].key,
+                            TEXT_STORE_SIZE - 1);
+                        build_http_entry.headers[i].key[TEXT_STORE_SIZE - 1] = '\0';
+
+                        if(app->build_http_state->headers[i].value[0] != '\0') {
+                            strncpy(
+                                build_http_entry.headers[i].value,
+                                app->build_http_state->headers[i].value,
+                                TEXT_STORE_SIZE - 1);
+                            build_http_entry.headers[i].value[TEXT_STORE_SIZE - 1] = '\0';
+                        } else {
+                            build_http_entry.headers[i].value[0] = '\0';
+                        }
+                        has_headers = true;
+                    } else {
+                        break; // No more headers
+                    }
+                }
+
+                // Handle payload
+                if(app->build_http_state->payload &&
+                   furi_string_size(app->build_http_state->payload) > 0) {
+                    build_http_entry.payload = app->build_http_state->payload;
+                } else {
+                    build_http_entry.payload = NULL;
+                }
+
+                build_http_entry.show_response_headers =
+                    app->build_http_state->show_response_headers;
+
+                if(!write_build_http_to_csv(app, &build_http_entry, has_headers)) {
+                    FURI_LOG_E(TAG, "Failed to write HTTP call to CSV");
+                }
+
+                draw_build_http_call_menu(app);
+                consumed = true;
             }
-            furi_string_free(build_http_entry.payload);
-            // sync_csv_build_http_to_mem(app);
-            draw_build_http_call_menu(app);
-            consumed = true;
             break;
-        case 9: // Load from CSV
+        case BuildHttpItemLoadFromCsv: // Load from CSV
             if(strlen(app->build_http_list[0].url) > 0) {
                 scene_manager_next_scene(app->scene_manager, Build_Http_Url_List);
                 consumed = true;

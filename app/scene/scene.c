@@ -23,7 +23,9 @@
 
 #include "./download/download.h" // Download progress view
 
-#include "./build_http_call/build_http_call.h"
+#include "./build_http_call/build_http_call.h" // Build Http View
+
+#include "./build_http_list/build_http_list.h"
 
 /** collection of all scene on_enter handlers - in the same order as their enum
  */
@@ -40,7 +42,8 @@ void (*const scene_on_enter_handlers[])(void*) = {
     scene_on_enter_download_progress,
     scene_on_enter_post,
     scene_on_enter_post_url_list,
-    scene_on_enter_build_http_call};
+    scene_on_enter_build_http_call,
+    scene_on_enter_build_http_list};
 
 /** collection of all scene on event handlers - in the same order as their enum
  */
@@ -57,7 +60,8 @@ bool (*const scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     scene_on_event_download_progress,
     scene_on_event_post,
     scene_on_event_post_url_list,
-    scene_on_event_build_http_call};
+    scene_on_event_build_http_call,
+    scene_on_event_build_http_list};
 
 /** collection of all scene on exit handlers - in the same order as their enum
  */
@@ -74,7 +78,8 @@ void (*const scene_on_exit_handlers[])(void*) = {
     scene_on_exit_download_progress,
     scene_on_exit_post,
     scene_on_exit_post_url_list,
-    scene_on_exit_build_http_call};
+    scene_on_exit_build_http_call,
+    scene_on_exit_build_http_list};
 
 /** collection of all on_enter, on_event, on_exit handlers */
 const SceneManagerHandlers scene_event_handlers = {
@@ -186,4 +191,7 @@ void view_dispatcher_init(App* app) {
         app->view_dispatcher,
         AppView_BuildHttpCall,
         variable_item_list_get_view(app->variable_item_list));
+
+    view_dispatcher_add_view(
+        app->view_dispatcher, AppView_BuildHttp_Url_List, submenu_get_view(app->submenu));
 }
