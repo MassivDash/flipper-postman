@@ -3,47 +3,27 @@
 // Some paths are absolute, and will need to be updated if you move the project.
 // To regenerate the file, delete it and run `ufbt vscode_dist` again.
 {
-  "cortex-debug.enableTelemetry": false,
-  "cortex-debug.variableUseNaturalFormat": false,
-  "cortex-debug.armToolchainPath": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin",
-  "cortex-debug.openocdPath": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin/openocd",
-  "cortex-debug.gdbPath": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin/arm-none-eabi-gdb-py3",
-  "editor.formatOnSave": true,
-  "files.associations": {
-    "*.scons": "python",
-    "SConscript": "python",
-    "SConstruct": "python",
-    "*.fam": "python"
-  },
-  "python.analysis.typeCheckingMode": "off",
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
-  },
-  "clangd.path": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin/clangd",
-  "clangd.arguments": [
-    "--query-driver=**/arm-none-eabi-*",
-    "--compile-commands-dir=${workspaceFolder}/.vscode",
-    "--clang-tidy",
-    "--header-insertion=never"
-  ],
-  "workbench.colorCustomizations": {
-    "activityBar.activeBackground": "#8bafcb",
-    "activityBar.background": "#8bafcb",
-    "activityBar.foreground": "#15202b",
-    "activityBar.inactiveForeground": "#15202b99",
-    "activityBarBadge.background": "#b04f86",
-    "activityBarBadge.foreground": "#e7e7e7",
-    "commandCenter.border": "#15202b99",
-    "sash.hoverBorder": "#8bafcb",
-    "statusBar.background": "#6897bb",
-    "statusBar.foreground": "#15202b",
-    "statusBarItem.hoverBackground": "#4b7ea5",
-    "statusBarItem.remoteBackground": "#6897bb",
-    "statusBarItem.remoteForeground": "#15202b",
-    "titleBar.activeBackground": "#6897bb",
-    "titleBar.activeForeground": "#15202b",
-    "titleBar.inactiveBackground": "#6897bb99",
-    "titleBar.inactiveForeground": "#15202b99"
-  },
-  "peacock.color": "#6897BB"
+    "cortex-debug.enableTelemetry": false,
+    "cortex-debug.variableUseNaturalFormat": false,
+    "cortex-debug.armToolchainPath": "/home/spaceghost/.ufbt/toolchain/x86_64-linux/bin",
+    "cortex-debug.openocdPath": "/home/spaceghost/.ufbt/toolchain/x86_64-linux/bin/openocd",
+    "cortex-debug.gdbPath": "/home/spaceghost/.ufbt/toolchain/x86_64-linux/bin/arm-none-eabi-gdb-py3",
+    "editor.formatOnSave": true,
+    "files.associations": {
+        "*.scons": "python",
+        "SConscript": "python",
+        "SConstruct": "python",
+        "*.fam": "python"
+    },
+    "python.analysis.typeCheckingMode": "off",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "clangd.path": "/home/spaceghost/.ufbt/toolchain/x86_64-linux/bin/clangd",
+    "clangd.arguments": [
+        "--query-driver=**/arm-none-eabi-*",
+        "--compile-commands-dir=${workspaceFolder}/.vscode",
+        "--clang-tidy",
+        "--header-insertion=never"
+    ]
 }

@@ -38,7 +38,7 @@ App* init() {
     init_csv_post_url(app);
 
     // Initialiaze the CSV file for Build Http Urls
-    // init_csv_build_http(app);
+    init_csv_build_http(app);
 
     // Initialize the text box for displaying UART responses
     app->text_box_store = furi_string_alloc();

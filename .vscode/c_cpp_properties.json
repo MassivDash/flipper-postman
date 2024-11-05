@@ -2,7 +2,7 @@
     "configurations": [
         {
             "name": "main",
-            "compilerPath": "/Users/lukasz.celitan/.ufbt/toolchain/arm64-darwin/bin/arm-none-eabi-gcc",
+            "compilerPath": "/home/spaceghost/.ufbt/toolchain/x86_64-linux/bin/arm-none-eabi-gcc",
             "intelliSenseMode": "gcc-arm",
             "compileCommands": "${workspaceFolder}/.vscode/compile_commands.json",
             "cStandard": "gnu23",

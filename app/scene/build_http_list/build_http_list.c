@@ -59,7 +59,7 @@ void scene_on_enter_build_http_list(void* context) {
     submenu_reset(app->submenu);
     submenu_set_header(app->submenu, "Build HTTP URLs");
     submenu_add_item(app->submenu, "Loading ...", 0, NULL, NULL);
-    view_dispatcher_switch_to_view(app->view_dispatcher, AppView_BuildHttpCall);
+    view_dispatcher_switch_to_view(app->view_dispatcher, AppView_BuildHttp_Url_List);
 
     // Clear the submenu and add the actual URLs
     if(app->build_http_list[0].url[0] != '\0') {

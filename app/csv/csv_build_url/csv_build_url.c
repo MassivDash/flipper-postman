@@ -12,165 +12,168 @@
 #define NO_HEADERS          "NO_HEADERS"
 #define NO_PAYLOAD          "NO_PAYLOAD"
 #define EMPTY_VALUE         "EMPTY_VALUE"
+#define MAX_BUFFER_SIZE     128
+#define SMALL_BUFFER_SIZE   64
 
+// Helper function to parse headers
 void string_to_headers_c(const char* str, HttpBuildHeader headers[MAX_HEADERS]) {
-    char* mutable_str = strdup(str);
-    char* token;
-    char* rest = mutable_str;
+    FuriString* token = furi_string_alloc();
+    size_t str_len = strlen(str);
+    size_t pos = 0;
     int i = 0;
 
-    while((token = strtok_r(rest, "@", &rest)) && i < MAX_HEADERS) {
-        char* key = strtok(token, ":");
-        char* value = strtok(NULL, ":");
+    // Clear headers first
+    memset(headers, 0, sizeof(HttpBuildHeader) * MAX_HEADERS);
 
-        if(key) {
-            strncpy(headers[i].key, key, TEXT_STORE_SIZE - 1);
-            headers[i].key[TEXT_STORE_SIZE - 1] = '\0';
+    while(pos < str_len && i < MAX_HEADERS) {
+        size_t delim_pos = strchr(str + pos, '@') - (str + pos);
+        if(delim_pos > SMALL_BUFFER_SIZE) break;
 
-            if(value) {
-                if(strcmp(value, EMPTY_VALUE) != 0) {
-                    strncpy(headers[i].value, value, TEXT_STORE_SIZE - 1);
-                    headers[i].value[TEXT_STORE_SIZE - 1] = '\0';
-                } else {
-                    headers[i].value[0] = '\0';
-                }
-            } else {
-                headers[i].value[0] = '\0';
-            }
+        char key_buf[SMALL_BUFFER_SIZE] = {0};
+        char value_buf[SMALL_BUFFER_SIZE] = {0};
 
-            i++;
+        size_t kv_pos = strchr(str + pos, ':') - (str + pos);
+        if(kv_pos > delim_pos || kv_pos > SMALL_BUFFER_SIZE) break;
+
+        strncpy(key_buf, str + pos, kv_pos);
+        strncpy(value_buf, str + pos + kv_pos + 1, delim_pos - kv_pos - 1);
+
+        strncpy(headers[i].key, key_buf, TEXT_STORE_SIZE - 1);
+        strncpy(headers[i].value, value_buf, TEXT_STORE_SIZE - 1);
+
+        pos += delim_pos + 1;
+        i++;
+    }
+
+    furi_string_free(token);
+}
+
+bool parse_csv_line(FuriString* buffer, BuildHttpList* item) {
+    FuriString* token = furi_string_alloc();
+    size_t pos = 0;
+    bool success = false;
+
+    // Parse URL
+    pos = furi_string_search(buffer, ",", 0);
+    if(pos == FURI_STRING_FAILURE) goto cleanup;
+    furi_string_set(token, buffer);
+    furi_string_left(token, pos);
+    strncpy(item->url, furi_string_get_cstr(token), TEXT_STORE_SIZE - 1);
+    furi_string_right(buffer, pos + 1);
+
+    // Parse mode
+    pos = furi_string_search(buffer, ",", 0);
+    if(pos == FURI_STRING_FAILURE) goto cleanup;
+    furi_string_set(token, buffer);
+    furi_string_left(token, pos);
+    item->mode = atoi(furi_string_get_cstr(token));
+    furi_string_right(buffer, pos + 1);
+
+    // Parse method
+    pos = furi_string_search(buffer, ",", 0);
+    if(pos == FURI_STRING_FAILURE) goto cleanup;
+    furi_string_set(token, buffer);
+    furi_string_left(token, pos);
+    item->http_method = (HttpBuildMethod)atoi(furi_string_get_cstr(token));
+    furi_string_right(buffer, pos + 1);
+
+    success = true;
+
+cleanup:
+    furi_string_free(token);
+    return success;
+}
+
+bool write_build_http_to_csv(App* app, const BuildHttpList* item, bool has_headers) {
+    if(!storage_file_open(app->file, BUILD_HTTP_CSV_PATH, FSAM_WRITE, FSOM_OPEN_APPEND)) {
+        return false;
+    }
+
+    // Prepare the entire line in memory
+    FuriString* line = furi_string_alloc();
+    furi_string_printf(line, "%s,%d,%d,", item->url, item->mode, item->http_method);
+
+    // Append headers
+    if(has_headers) {
+        for(int i = 0; i < MAX_HEADERS && item->headers[i].key[0]; i++) {
+            furi_string_cat_printf(
+                line,
+                "%s:%s%s",
+                item->headers[i].key,
+                item->headers[i].value[0] ? item->headers[i].value : EMPTY_VALUE,
+                (i < MAX_HEADERS - 1 && item->headers[i + 1].key[0]) ? "@" : "");
         }
+    } else {
+        furi_string_cat_str(line, NO_HEADERS);
+    }
+    furi_string_cat_str(line, ",");
+
+    // Append payload
+    if(item->payload && furi_string_size(item->payload) > 0) {
+        furi_string_cat(line, item->payload);
+    } else {
+        furi_string_cat_str(line, NO_PAYLOAD);
     }
 
-    // Clear any remaining headers
-    for(; i < MAX_HEADERS; i++) {
-        headers[i].key[0] = '\0';
-        headers[i].value[0] = '\0';
-    }
+    // Append final fields
+    furi_string_cat_printf(line, ",%d\n", item->show_response_headers);
 
-    free(mutable_str);
+    FURI_LOG_D(TAG, "Writing line: %s", furi_string_get_cstr(line));
+    // Write the entire line at once
+    storage_file_write(app->file, furi_string_get_cstr(line), furi_string_size(line));
+
+    furi_string_free(line);
+    storage_file_close(app->file);
+    return true;
 }
 
 bool sync_csv_build_http_to_mem(App* app) {
-    FURI_LOG_T(TAG, "Syncing Build HTTP CSV with flipper memory");
-    char buffer[512]; // Stack-allocated buffer
-    size_t bytes_read;
+    FuriString* buffer = furi_string_alloc();
 
     if(!storage_file_open(app->file, BUILD_HTTP_CSV_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
-        FURI_LOG_E(TAG, "Failed to open Build HTTP file");
+        furi_string_free(buffer);
         return false;
     }
 
     size_t index = 0;
-    while(storage_file_read(app->file, buffer, sizeof(buffer) - 1) &&
-          index < MAX_URLS_BUILD_HTTP) {
-        bytes_read = strlen(buffer);
-        buffer[bytes_read] = '\0';
-        char* line = buffer;
-        char* next_line;
+    while(index < MAX_URLS_BUILD_HTTP) {
+        if(!read_line_from_file(app->file, buffer)) break;
 
-        while((next_line = strchr(line, '\n')) != NULL && index < MAX_URLS_BUILD_HTTP) {
-            *next_line = '\0';
-            BuildHttpList* item = &app->build_http_list[index];
-            char* token;
-            int field = 0;
+        BuildHttpList* item = &app->build_http_list[index];
+        memset(item, 0, sizeof(BuildHttpList));
+        item->payload = furi_string_alloc();
 
-            // URL
-            token = strsep(&line, ",");
-            if(token) {
-                strncpy(item->url, token, TEXT_STORE_SIZE - 1);
-                item->url[TEXT_STORE_SIZE - 1] = '\0';
-                field++;
-            }
-
-            // Mode
-            token = strsep(&line, ",");
-            if(token) {
-                item->mode = atoi(token) != 0;
-                field++;
-            }
-
-            // HTTP Method
-            token = strsep(&line, ",");
-            if(token) {
-                item->http_method = (HttpBuildMethod)atoi(token);
-                field++;
-            }
-
-            // Headers
-            token = strsep(&line, ",");
-            if(token) {
-                if(strcmp(token, NO_HEADERS) != 0) {
-                    string_to_headers_c(token, item->headers);
-                } else {
-                    memset(item->headers, 0, sizeof(HttpBuildHeader) * MAX_HEADERS);
-                }
-                field++;
-            }
-
-            // Payload
-            token = strsep(&line, ",");
-            if(token) {
-                if(strcmp(token, NO_PAYLOAD) != 0) {
-                    item->payload = furi_string_alloc_set(token);
-                } else {
-                    item->payload = furi_string_alloc();
-                }
-                field++;
-            }
-
-            // Show Response Headers
-            token = strsep(&line, ",");
-            if(token) {
-                item->show_response_headers = atoi(token) != 0;
-                field++;
-            }
-
-            if(field == 6) {
-                index++;
-            } else {
-                FURI_LOG_W(TAG, "Invalid CSV line format");
-            }
-
-            line = next_line + 1;
+        if(!parse_csv_line(buffer, item)) {
+            furi_string_free(item->payload);
+            break;
         }
-
-        // If there's remaining data, move it to the beginning of the buffer
-        if(*line != '\0') {
-            memmove(buffer, line, strlen(line) + 1);
-            storage_file_seek(app->file, -(long)strlen(buffer), true);
-        }
+        index++;
     }
 
     // Clear remaining entries
     for(; index < MAX_URLS_BUILD_HTTP; index++) {
-        if(app->build_http_list[index].payload) {
-            furi_string_free(app->build_http_list[index].payload);
-        }
         memset(&app->build_http_list[index], 0, sizeof(BuildHttpList));
         app->build_http_list[index].payload = furi_string_alloc();
     }
 
+    furi_string_free(buffer);
     storage_file_close(app->file);
-    FURI_LOG_T(TAG, "Done with syncing Build HTTP CSV with flipper memory");
     return true;
 }
 
 bool init_csv_build_http(App* app) {
-    FURI_LOG_T(TAG, "Initializing Build HTTP CSV");
-
     if(!app->file) {
         FURI_LOG_E(TAG, "Failed to allocate storage file");
         return false;
     }
 
-    // Initialize the build_http_list array
+    // Initialize list with minimal memory
     for(int i = 0; i < MAX_URLS_BUILD_HTTP; i++) {
         memset(&app->build_http_list[i], 0, sizeof(BuildHttpList));
         app->build_http_list[i].payload = furi_string_alloc();
         if(!app->build_http_list[i].payload) {
-            FURI_LOG_E(TAG, "Failed to allocate memory for payload");
-            // Clean up previously allocated memory
+            FURI_LOG_E(TAG, "Failed to allocate payload memory");
+            // Cleanup previously allocated
             for(int j = 0; j < i; j++) {
                 furi_string_free(app->build_http_list[j].payload);
             }
@@ -179,105 +182,31 @@ bool init_csv_build_http(App* app) {
     }
 
     if(storage_file_exists(app->storage, BUILD_HTTP_CSV_PATH)) {
-        FURI_LOG_I(TAG, "Build HTTP CSV file exists, reading data from file");
         if(!sync_csv_build_http_to_mem(app)) {
-            FURI_LOG_E(TAG, "Failed to read Build HTTP data from CSV file");
+            FURI_LOG_E(TAG, "Failed to sync CSV data");
             return false;
         }
     } else {
-        FURI_LOG_I(TAG, "Build HTTP CSV file does not exist, creating a new one.");
         if(!storage_file_open(app->file, BUILD_HTTP_CSV_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
-            FURI_LOG_E(TAG, "Failed to create Build HTTP CSV file");
+            FURI_LOG_E(TAG, "Failed to create CSV file");
             return false;
         }
         storage_file_close(app->file);
     }
 
-    FURI_LOG_T(TAG, "Done with initializing Build HTTP CSV");
     return true;
-}
-
-bool write_build_http_to_csv(App* app, const BuildHttpList* item, bool has_headers) {
-    FURI_LOG_T(TAG, "Writing Build HTTP to CSV");
-    if(!storage_file_open(app->file, BUILD_HTTP_CSV_PATH, FSAM_WRITE, FSOM_OPEN_APPEND)) {
-        FURI_LOG_E(TAG, "Failed to open Build HTTP file for writing");
-        return false;
-    }
-
-    bool success = false;
-    char buffer[256]; // Stack-allocated buffer
-    int written = 0;
-    int buffer_size = (int)sizeof(buffer);
-
-    do {
-        // Write URL, mode, and HTTP method
-        written = snprintf(
-            buffer,
-            sizeof(buffer),
-            "%s,%d,%d,",
-            item->url,
-            (int)item->mode,
-            (int)item->http_method);
-        if(written < 0 || written >= buffer_size) break;
-        if(!storage_file_write(app->file, buffer, written)) break;
-
-        // Write headers
-        if(has_headers) {
-            for(int i = 0; i < MAX_HEADERS && item->headers[i].key[0] != '\0'; i++) {
-                written = snprintf(buffer, sizeof(buffer), "%s:", item->headers[i].key);
-                if(written < 0 || written >= buffer_size) break;
-                if(!storage_file_write(app->file, buffer, written)) break;
-
-                if(item->headers[i].value[0] != '\0') {
-                    written = snprintf(buffer, sizeof(buffer), "%s", item->headers[i].value);
-                } else {
-                    written = snprintf(buffer, sizeof(buffer), EMPTY_VALUE);
-                }
-                if(written < 0 || written >= buffer_size) break;
-                if(!storage_file_write(app->file, buffer, written)) break;
-
-                if(i < MAX_HEADERS - 1 && item->headers[i + 1].key[0] != '\0') {
-                    if(!storage_file_write(app->file, "@", 1)) break;
-                }
-            }
-        } else {
-            if(!storage_file_write(app->file, NO_HEADERS, strlen(NO_HEADERS))) break;
-        }
-        if(!storage_file_write(app->file, ",", 1)) break;
-
-        // Write payload
-        if(item->payload && furi_string_size(item->payload) > 0) {
-            if(!storage_file_write(
-                   app->file, furi_string_get_cstr(item->payload), furi_string_size(item->payload)))
-                break;
-        } else {
-            if(!storage_file_write(app->file, NO_PAYLOAD, strlen(NO_PAYLOAD))) break;
-        }
-        if(!storage_file_write(app->file, ",", 1)) break;
-
-        // Write show_response_headers
-        written = snprintf(buffer, sizeof(buffer), "%d\n", (int)item->show_response_headers);
-        if(written < 0 || written >= buffer_size) break;
-        if(!storage_file_write(app->file, buffer, written)) break;
-
-        success = true;
-    } while(0);
-
-    if(!success) {
-        FURI_LOG_E(TAG, "Failed to write Build HTTP to file");
-    }
-
-    storage_file_close(app->file);
-    FURI_LOG_T(TAG, "Done with writing Build HTTP to CSV");
-    return success;
 }
 
 bool delete_build_http_from_csv(App* app, const char* url) {
     FURI_LOG_T(TAG, "Deleting Build HTTP from CSV");
+
+    if(!app || !url) return false;
+
     FuriString* buffer = furi_string_alloc();
     FuriString* new_content = furi_string_alloc();
     bool url_found = false;
 
+    // Open file for reading
     if(!storage_file_open(app->file, BUILD_HTTP_CSV_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         FURI_LOG_E(TAG, "Failed to open Build HTTP file for reading");
         furi_string_free(buffer);
@@ -285,10 +214,12 @@ bool delete_build_http_from_csv(App* app, const char* url) {
         return false;
     }
 
+    // Read line by line and skip matching URL
     while(read_line_from_file(app->file, buffer)) {
+        // Check if line starts with the URL we want to delete
         if(strncmp(furi_string_get_cstr(buffer), url, strlen(url)) != 0) {
             furi_string_cat(new_content, buffer);
-            furi_string_cat(new_content, "\n");
+            furi_string_cat_str(new_content, "\n");
         } else {
             url_found = true;
         }
@@ -297,6 +228,7 @@ bool delete_build_http_from_csv(App* app, const char* url) {
     storage_file_close(app->file);
 
     if(url_found) {
+        // Rewrite file with filtered content
         if(!storage_file_open(app->file, BUILD_HTTP_CSV_PATH, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
             FURI_LOG_E(TAG, "Failed to open Build HTTP file for writing");
             furi_string_free(buffer);
@@ -304,24 +236,23 @@ bool delete_build_http_from_csv(App* app, const char* url) {
             return false;
         }
 
-        bool success = storage_file_write(
-            app->file, furi_string_get_cstr(new_content), furi_string_size(new_content));
-
-        if(!success) {
-            FURI_LOG_E(TAG, "Failed to write updated content to Build HTTP file");
+        if(furi_string_size(new_content) > 0) {
+            if(!storage_file_write(
+                   app->file, furi_string_get_cstr(new_content), furi_string_size(new_content))) {
+                FURI_LOG_E(TAG, "Failed to write filtered content");
+                storage_file_close(app->file);
+                furi_string_free(buffer);
+                furi_string_free(new_content);
+                return false;
+            }
         }
 
         storage_file_close(app->file);
-
-        if(!success) {
-            furi_string_free(buffer);
-            furi_string_free(new_content);
-            return false;
-        }
     }
 
     furi_string_free(buffer);
     furi_string_free(new_content);
+
     FURI_LOG_T(TAG, "Done with deleting Build HTTP from CSV");
     return url_found;
 }
