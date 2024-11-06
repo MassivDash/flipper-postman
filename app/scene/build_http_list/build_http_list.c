@@ -41,6 +41,13 @@ void submenu_callback_select_build_http_url(void* context, uint32_t index) {
     app->build_http_state->show_response_headers =
         app->build_http_list[index].show_response_headers;
 
+    FURI_LOG_T(TAG, "Print the state of the app on list callback");
+    FURI_LOG_D(TAG, "Mode: %d", app->build_http_state->mode);
+    FURI_LOG_D(TAG, "HTTP Method: %d", app->build_http_state->http_method);
+    FURI_LOG_D(TAG, "Show Response Headers: %d", app->build_http_state->show_response_headers);
+    FURI_LOG_D(TAG, "URL: %s", app->build_http_state->url);
+    FURI_LOG_D(TAG, "Payload: %s", furi_string_get_cstr(app->build_http_state->payload));
+
     // Handle the custom event to move to the Build HTTP details scene
     scene_manager_handle_custom_event(app->scene_manager, AppEvent_Build_Http_Url_List);
 }

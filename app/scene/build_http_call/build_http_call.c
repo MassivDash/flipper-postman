@@ -89,6 +89,13 @@ void draw_build_http_call_menu(App* app) {
     bool url_found = url_in_csv(app, app->build_http_state->url, StateTypeBuildHttp);
 
     FURI_LOG_T(TAG, "URL found %d", url_found);
+    FURI_LOG_T(TAG, "Print the state of the app");
+    FURI_LOG_D(TAG, "Mode: %d", app->build_http_state->mode);
+    FURI_LOG_D(TAG, "HTTP Method: %d", app->build_http_state->http_method);
+    FURI_LOG_D(TAG, "Show Response Headers: %d", app->build_http_state->show_response_headers);
+    FURI_LOG_D(TAG, "URL: %s", app->build_http_state->url);
+    FURI_LOG_D(TAG, "Payload: %s", furi_string_get_cstr(app->build_http_state->payload));
+
     // Mode selection: Display / Save to file
     const char* mode_names[] = {"Display", "Save"};
     item =
@@ -261,6 +268,12 @@ bool scene_on_event_build_http_call(void* context, SceneManagerEvent event) {
                 scene_manager_next_scene(app->scene_manager, Build_Http_Url_List);
                 consumed = true;
             }
+            break;
+        case BuildHttpItemDeleteFromCsv: // Delete from CSV
+            delete_build_http_from_csv(app, app->build_http_state->url);
+            sync_csv_build_http_to_mem(app);
+            draw_build_http_call_menu(app);
+            consumed = true;
             break;
         default:
             consumed = false;
