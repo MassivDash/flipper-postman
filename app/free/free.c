@@ -59,6 +59,13 @@ void app_free(App* app) {
         free(app->csv_networks[i].password); // Free dynamically allocated memory for password
     }
 
+    // Memory clear for the Build HTTP CSV imported items
+    for(int i = 0; i < MAX_URLS_BUILD_HTTP; i++) {
+        free(app->build_http_list[i]
+                 .payload); // Free dynamically allocated memory within each BuildHttpList
+    }
+
+    // Free text box store
     furi_string_free(app->text_box_store);
     furi_timer_free(app->timer);
     furi_record_close(RECORD_STORAGE);
