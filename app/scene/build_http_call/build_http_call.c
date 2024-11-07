@@ -85,9 +85,13 @@ void draw_build_http_call_menu(App* app) {
     VariableItem* item;
 
     bool url_set = strlen(app->build_http_state->url) > 0;
-    bool payload_set = !furi_string_empty(app->build_http_state->payload);
-    bool url_found = url_in_csv(app, app->build_http_state->url, StateTypeBuildHttp);
+    bool payload_set = app->build_http_state->payload &&
+                       !furi_string_empty(app->build_http_state->payload);
 
+    bool url_found = false;
+    if(url_set) {
+        url_found = url_in_csv(app, app->build_http_state->url, StateTypeBuildHttp);
+    }
     FURI_LOG_T(TAG, "URL found %d", url_found);
     FURI_LOG_T(TAG, "Print the state of the app");
     FURI_LOG_D(TAG, "Mode: %d", app->build_http_state->mode);
@@ -139,7 +143,7 @@ void draw_build_http_call_menu(App* app) {
         item = variable_item_list_add(
             variable_item_list, url_found ? "Delete from CSV" : "Save to CSV", 0, NULL, app);
     }
-    if(strlen(app->build_http_list[0].url) > 0) {
+    if(app->build_http_list && strlen(app->build_http_list[0].url) > 0) {
         item = variable_item_list_add(variable_item_list, "Load from CSV", 0, NULL, app);
     }
 }
@@ -151,11 +155,17 @@ void scene_on_enter_build_http_call(void* context) {
 
     if(!app->build_http_state) {
         app->build_http_state = malloc(sizeof(BuildHttpState));
+        if(!app->build_http_state) {
+            FURI_LOG_E(TAG, "Failed to allocate build_http_state");
+            return;
+        }
         app->build_http_state->mode = false;
         app->build_http_state->http_method = GET;
         app->build_http_state->show_response_headers = false;
         strcpy(app->build_http_state->url, "");
         app->build_http_state->payload = furi_string_alloc();
+        app->build_http_state->headers = NULL;
+        app->build_http_state->headers_count = 0;
     }
 
     variable_item_list_set_enter_callback(
@@ -215,21 +225,25 @@ bool scene_on_event_build_http_call(void* context, SceneManagerEvent event) {
                     app->build_http_state->show_response_headers;
 
                 // Handle headers
-                bool has_headers = false;
-                for(int i = 0; i < MAX_HEADERS && app->build_http_state->headers[i].key[0]; i++) {
-                    strncpy(
-                        build_http_entry->headers[i].key,
-                        app->build_http_state->headers[i].key,
-                        TEXT_STORE_SIZE - 1);
-                    build_http_entry->headers[i].key[TEXT_STORE_SIZE - 1] = '\0';
+                build_http_entry->headers_count = app->build_http_state->headers_count;
+                if(build_http_entry->headers_count > 0) {
+                    build_http_entry->headers =
+                        malloc(build_http_entry->headers_count * sizeof(HttpBuildHeader));
+                    for(size_t i = 0; i < build_http_entry->headers_count; i++) {
+                        strncpy(
+                            build_http_entry->headers[i].key,
+                            app->build_http_state->headers[i].key,
+                            TEXT_STORE_SIZE - 1);
+                        build_http_entry->headers[i].key[TEXT_STORE_SIZE - 1] = '\0';
 
-                    strncpy(
-                        build_http_entry->headers[i].value,
-                        app->build_http_state->headers[i].value,
-                        TEXT_STORE_SIZE - 1);
-                    build_http_entry->headers[i].value[TEXT_STORE_SIZE - 1] = '\0';
-
-                    has_headers = true;
+                        strncpy(
+                            build_http_entry->headers[i].value,
+                            app->build_http_state->headers[i].value,
+                            TEXT_STORE_SIZE - 1);
+                        build_http_entry->headers[i].value[TEXT_STORE_SIZE - 1] = '\0';
+                    }
+                } else {
+                    build_http_entry->headers = NULL;
                 }
 
                 // Handle payload safely
@@ -238,18 +252,21 @@ bool scene_on_event_build_http_call(void* context, SceneManagerEvent event) {
                     build_http_entry->payload =
                         furi_string_alloc_set(app->build_http_state->payload);
                 } else {
-                    build_http_entry->payload = furi_string_alloc();
+                    build_http_entry->payload = NULL;
                 }
 
                 FURI_LOG_T(TAG, "Writing to CSV");
                 FURI_LOG_D(TAG, "ITEM URL: %s", build_http_entry->url);
 
                 // Write to CSV
-                bool write_success = write_build_http_to_csv(app, build_http_entry, has_headers);
+                bool write_success = write_build_http_to_csv(app, build_http_entry);
 
                 // Cleanup
                 if(build_http_entry->payload) {
                     furi_string_free(build_http_entry->payload);
+                }
+                if(build_http_entry->headers) {
+                    free(build_http_entry->headers);
                 }
                 free(build_http_entry);
 

@@ -4,7 +4,7 @@
 
 #include <furi.h>
 
-#define KEY_NAME_SIZE                       22
+#define KEY_NAME_SIZE                       40
 #define TEXT_STORE_SIZE                     256
 #define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
 #define MAX_URLS                            10
@@ -256,9 +256,9 @@ typedef enum {
 typedef struct {
     bool mode; // Mode: Display or Save
     char url[TEXT_STORE_SIZE]; // URL
-    bool method; // Method: GET or GET_STREAM
     HttpBuildMethod http_method; // HEAD, GET, POST, PATCH, PUT, DELETE
-    HttpBuildHeader headers[MAX_HEADERS];
+    HttpBuildHeader* headers; // Headers
+    size_t headers_count; // Number of headers
     FuriString* payload; // Payload {body}
     bool show_response_headers;
 } BuildHttpState;
@@ -280,9 +280,11 @@ typedef struct {
     char url[TEXT_STORE_SIZE];
     bool mode;
     HttpBuildMethod http_method;
-    HttpBuildHeader headers[MAX_HEADERS];
+    HttpBuildHeader* headers;
+    size_t headers_count;
     FuriString* payload;
     bool show_response_headers;
+
 } BuildHttpList;
 
 #endif // STRUCTS_H

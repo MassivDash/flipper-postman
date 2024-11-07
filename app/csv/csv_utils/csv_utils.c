@@ -38,9 +38,20 @@ bool url_in_csv(App* app, const char* url, StateType state_type) {
     FuriString* csv_url = furi_string_alloc();
     bool url_in_csv = false;
 
-    size_t max_urls = MAX_URLS;
-    if(state_type == StateTypeBuildHttp) {
-        max_urls = MAX_URLS_BUILD_HTTP;
+    size_t max_urls = 0;
+
+    switch(state_type) {
+    case StateTypeGet:
+        max_urls = MAX_URLS;
+        break;
+    case StateTypePost:
+        max_urls = MAX_URLS; // Ensure MAX_URLS_POST is defined appropriately
+        break;
+    case StateTypeBuildHttp:
+        max_urls = app->build_http_list_size; // Use dynamic size
+        break;
+    default:
+        goto cleanup;
     }
 
     for(size_t i = 0; i < max_urls; i++) {
@@ -54,10 +65,15 @@ bool url_in_csv(App* app, const char* url, StateType state_type) {
         case StateTypeBuildHttp:
             furi_string_set_str(csv_url, app->build_http_list[i].url);
             break;
+        default:
+            break;
         }
 
         FURI_LOG_D(
-            TAG, "str1 %s, str2 %s", furi_string_get_cstr(url_str), furi_string_get_cstr(csv_url));
+            TAG,
+            "Comparing URLs: %s and %s",
+            furi_string_get_cstr(url_str),
+            furi_string_get_cstr(csv_url));
         if(compare_url(url_str, csv_url)) {
             url_in_csv = true;
             break;
@@ -66,6 +82,7 @@ bool url_in_csv(App* app, const char* url, StateType state_type) {
         furi_string_reset(csv_url);
     }
 
+cleanup:
     furi_string_free(url_str);
     furi_string_free(csv_url);
     return url_in_csv;

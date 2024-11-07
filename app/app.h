@@ -79,7 +79,8 @@ typedef struct {
 
     //Build Http View
     BuildHttpState* build_http_state; // Build http (custom config) call
-    BuildHttpList build_http_list[MAX_URLS_BUILD_HTTP]; // Build http csv store
+    BuildHttpList* build_http_list; // Build http csv store
+    size_t build_http_list_size; // Number of items in the build_http_list
 } App;
 
 #endif // APP_H
