@@ -22,7 +22,8 @@ void submenu_callback_select_build_http_url(void* context, uint32_t index) {
         app->build_http_state->show_response_headers = false;
         strcpy(app->build_http_state->url, "");
         app->build_http_state->payload = furi_string_alloc();
-        app->build_http_state->headers = NULL;
+        app->build_http_state->headers =
+            malloc(sizeof(HttpBuildHeader)); // Allocate a small amount of memory
         app->build_http_state->headers_count = 0;
     }
 
@@ -40,12 +41,14 @@ void submenu_callback_select_build_http_url(void* context, uint32_t index) {
     // Free existing headers in build_http_state
     if(app->build_http_state->headers) {
         free(app->build_http_state->headers);
-        app->build_http_state->headers = NULL;
+        app->build_http_state->headers =
+            malloc(sizeof(HttpBuildHeader)); // Allocate a small amount of memory
         app->build_http_state->headers_count = 0;
     }
 
     // Allocate memory for headers if they exist
     size_t headers_count = app->build_http_list[index].headers_count;
+    FURI_LOG_D(TAG, "Headers count: %zu", headers_count);
     if(headers_count > 0) {
         app->build_http_state->headers = malloc(headers_count * sizeof(HttpBuildHeader));
         if(!app->build_http_state->headers) {
@@ -68,7 +71,8 @@ void submenu_callback_select_build_http_url(void* context, uint32_t index) {
             app->build_http_state->headers[i].value[TEXT_STORE_SIZE - 1] = '\0';
         }
     } else {
-        app->build_http_state->headers = NULL;
+        app->build_http_state->headers =
+            malloc(sizeof(HttpBuildHeader)); // Allocate a small amount of memory
         app->build_http_state->headers_count = 0;
     }
 

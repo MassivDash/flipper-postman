@@ -117,6 +117,8 @@ void string_to_headers_c(const char* str, HttpBuildHeader** headers, size_t* hea
 // https://www.example.com,1,1,NO_HEADERS,Hello,1
 // Example with no payload:
 // https://www.example.com,1,1,Content-Type:application/json@Authorization:Bearer,NO_PAYLOAD,1
+// Example with no headers and no payload:
+// https://www.example.com,1,1,NO_HEADERS,NO_PAYLOAD,1
 
 bool parse_csv_line(FuriString* buffer, BuildHttpList* item) {
     if(!buffer || !item) {
@@ -169,7 +171,7 @@ bool parse_csv_line(FuriString* buffer, BuildHttpList* item) {
             goto cleanup;
         }
     } else {
-        item->headers = NULL;
+        item->headers = malloc(sizeof(HttpBuildHeader)); // Allocate a small amount of memory
         item->headers_count = 0;
     }
     furi_string_right(buffer, pos + 1);
@@ -186,7 +188,7 @@ bool parse_csv_line(FuriString* buffer, BuildHttpList* item) {
             goto cleanup;
         }
     } else {
-        item->payload = NULL;
+        item->payload = furi_string_alloc(); // Allocate an empty FuriString
     }
     furi_string_right(buffer, pos + 1);
 
