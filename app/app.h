@@ -59,11 +59,12 @@ typedef struct {
     VariableItemList* variable_item_list; // Variable item list for get view
     GetState* get_state; // Get state for get view
     UrlList* url_list; // Dynamic list of get urls
-    size_t url_list_count; // List of get urls TODO: Change to dynamic array
+    size_t url_list_count; // List of get urls count
 
     // POST VIEW
     PostState* post_state; // Post state for get view
-    PostUrlList post_url_list[MAX_URLS]; //TODO: Change to dynamic array
+    PostUrlList* post_url_list;
+    size_t post_url_list_count; // List of post urls count
 
     // Save to file global flag for uart responses
     bool save_to_file; // Flag for saving uart responses to file

@@ -4,11 +4,19 @@
 
 #include <furi.h>
 
+#define RX_BUF_SIZE         (2096)
+#define LAST_RESPONSE_SIZE  (2096)
+#define MAX_WIFI_NETWORKS   20
+#define MAX_SSID_LENGTH     128
+#define MAX_PASSWORD_LENGTH 128
+#define CONNECT_CMD_BUFFER_SIZE                       \
+    (16 + MAX_SSID_LENGTH + 1 + MAX_PASSWORD_LENGTH + \
+     1) // "WIFI_CONNECT: " + ssid + " " + password + null terminator
+#define MAX_WIFI_CREDENTIALS 10 // Define the maximum number of WiFi credentials
+
 #define KEY_NAME_SIZE                       40
 #define TEXT_STORE_SIZE                     256
 #define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
-#define MAX_URLS                            10
-#define MAX_URLS_BUILD_HTTP                 5
 
 /** all scenes */
 
@@ -114,16 +122,6 @@ typedef struct {
     const char* description;
     void (*execute)(const char* argument);
 } Command;
-
-#define RX_BUF_SIZE         (2096)
-#define LAST_RESPONSE_SIZE  (2096)
-#define MAX_WIFI_NETWORKS   20
-#define MAX_SSID_LENGTH     128
-#define MAX_PASSWORD_LENGTH 128
-#define CONNECT_CMD_BUFFER_SIZE                       \
-    (16 + MAX_SSID_LENGTH + 1 + MAX_PASSWORD_LENGTH + \
-     1) // "WIFI_CONNECT: " + ssid + " " + password + null terminator
-#define MAX_WIFI_CREDENTIALS 10 // Define the maximum number of WiFi credentials
 
 typedef struct {
     char ssid[MAX_SSID_LENGTH];

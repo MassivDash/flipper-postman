@@ -45,7 +45,7 @@ bool url_in_csv(App* app, const char* url, StateType state_type) {
         max_urls = app->url_list_count;
         break;
     case StateTypePost:
-        max_urls = MAX_URLS; // Ensure MAX_URLS_POST is defined appropriately
+        max_urls = app->post_url_list_count;
         break;
     case StateTypeBuildHttp:
         max_urls = app->build_http_list_size; // Use dynamic size
