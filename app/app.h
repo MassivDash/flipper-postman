@@ -52,8 +52,8 @@ typedef struct {
 
     // WIFI lists
     AvailableWifiList wifi_list; // This holds the board wifi scan results
-    WifiCredential csv_networks
-        [MAX_WIFI_NETWORKS]; // List of wifi networks from csv TODO: Change to dynamic array
+    WifiCredential* csv_networks; // List of wifi networks from csv
+    size_t csv_networks_count; // Number of wifi networks from csv
 
     // GET VIEW
     VariableItemList* variable_item_list; // Variable item list for get view

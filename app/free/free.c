@@ -80,9 +80,13 @@ void app_free(App* app) {
     }
 
     // Memory clear for the WiFi Networks CSV imported items
-    for(int i = 0; i < MAX_WIFI_NETWORKS; i++) {
-        free(app->csv_networks[i].ssid); // Free dynamically allocated memory for ssid
-        free(app->csv_networks[i].password); // Free dynamically allocated memory for password
+    if(app->csv_networks) {
+        for(size_t i = 0; i < app->csv_networks_count; i++) {
+            // No need to free individual SSIDs and passwords if they are not dynamically allocated
+        }
+        free(app->csv_networks); // Free the dynamic array itself
+        app->csv_networks = NULL;
+        app->csv_networks_count = 0;
     }
 
     if(app->build_http_state) {

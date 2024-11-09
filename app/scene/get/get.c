@@ -17,6 +17,7 @@ static void get_scene_mode_callback(VariableItem* item) {
 
     // Update the display text
     variable_item_set_current_value_text(item, app->get_state->mode ? "Save" : "Display");
+    draw_get_menu(app);
 }
 
 static void get_scene_method_callback(VariableItem* item) {
