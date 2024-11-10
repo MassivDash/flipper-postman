@@ -14,8 +14,9 @@
      1) // "WIFI_CONNECT: " + ssid + " " + password + null terminator
 #define MAX_WIFI_CREDENTIALS 10 // Define the maximum number of WiFi credentials
 
-#define KEY_NAME_SIZE                       40
-#define TEXT_STORE_SIZE                     256
+#define KEY_NAME_SIZE 40
+#define TEXT_STORE_SIZE \
+    1024 // Approximate size of bearer token is around 800, hopefully this will be enough
 #define UART_TERMINAL_TEXT_INPUT_STORE_SIZE (512)
 
 /** all scenes */
@@ -56,6 +57,7 @@ typedef enum {
     AppView_Post_Url_List,
     AppView_BuildHttpCall,
     AppView_BuildHttp_Url_List,
+    AppView_BuildHttp_Headers,
     // AppView_Listen,
     // AppView_About,
     AppView_Display,
@@ -75,6 +77,8 @@ typedef enum {
     AppEvent_Build_Http_Url,
     AppEvent_Build_Http_Payload,
     AppEvent_Build_Http_Url_List,
+    AppEvent_Build_Http_Header_Key,
+    AppEvent_Build_Http_Header_Value,
     AppEvent_Download,
     AppEvent_Listen,
     AppEvent_About,

@@ -241,7 +241,7 @@ bool scene_on_event_connect_details(void* context, SceneManagerEvent event) {
     bool consumed = false;
     switch(event.type) {
     case SceneManagerEventTypeBack:
-        scene_manager_next_scene(app->scene_manager, MainMenu);
+        scene_manager_search_and_switch_to_previous_scene(app->scene_manager, MainMenu);
         consumed = true;
         break;
     case SceneManagerEventTypeCustom:
