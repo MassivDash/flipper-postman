@@ -27,7 +27,6 @@ bool buildHttpMethodCommand(Uart* uart, const char* argument);
 bool buildHttpUrlCommand(Uart* uart, const char* argument);
 bool buildHttpHeaderCommand(Uart* uart, const char* argument);
 bool buildHttpPayloadCommand(Uart* uart, const char* argument);
-bool removeHttpHeaderCommand(Uart* uart, const char* argument);
 bool resetHttpConfigCommand(Uart* uart, const char* argument);
 bool buildHttpShowResponseHeadersCommand(Uart* uart, const char* argument);
 bool buildHttpImplementationCommand(Uart* uart, const char* argument);

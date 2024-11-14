@@ -25,5 +25,25 @@
         "--compile-commands-dir=${workspaceFolder}/.vscode",
         "--clang-tidy",
         "--header-insertion=never"
-    ]
+    ],
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#f9833d",
+        "activityBar.background": "#f9833d",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#a2fcc4",
+        "activityBarBadge.foreground": "#15202b",
+        "commandCenter.border": "#15202b99",
+        "sash.hoverBorder": "#f9833d",
+        "statusBar.background": "#f7630c",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#c94f07",
+        "statusBarItem.remoteBackground": "#f7630c",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#f7630c",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#f7630c99",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.remoteColor": "#F7630C"
 }

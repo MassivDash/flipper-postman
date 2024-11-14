@@ -11,6 +11,7 @@ void get_the_header(App* app, FuriString* header) {
     DisplayMode mode = app->display_mode;
     GetState* get_state = app->get_state;
     PostState* post_state = app->post_state;
+    BuildHttpState* build_state = app->build_http_state;
     furi_string_reset(header);
     switch(mode) {
     case DISPLAY_GET:
@@ -26,7 +27,7 @@ void get_the_header(App* app, FuriString* header) {
         furi_string_printf(header, "Posting: %s", post_state->url);
         break;
     case DISPLAY_BUILD_HTTP:
-        furi_string_printf(header, "Building HTTP: %s", get_state->url);
+        furi_string_printf(header, "Building HTTP: %s", build_state->url);
         break;
     case DISPLAY_DOWNLOAD:
         furi_string_printf(header, "Downloading: %s", get_state->url);
@@ -47,7 +48,8 @@ typedef enum {
     METHOD_GET,
     METHOD_GET_STREAM,
     METHOD_POST,
-    METHOD_POST_STREAM
+    METHOD_POST_STREAM,
+    METHOD_CUSTOM
 } HttpDisplayMethod;
 
 bool sendHttpRequest(App* app, HttpDisplayMethod method, const char* url, FuriString* payload) {
@@ -72,6 +74,10 @@ bool sendHttpRequest(App* app, HttpDisplayMethod method, const char* url, FuriSt
         method_str = "POST";
         snprintf(
             command, sizeof(command), "%s %s %s\n", method_str, url, furi_string_get_cstr(payload));
+        break;
+    case METHOD_CUSTOM:
+        method_str = "EXECUTE_HTTP_CALL";
+        snprintf(command, sizeof(command), "%s \n", method_str);
         break;
     default:
         FURI_LOG_E(TAG, "Unknown HTTP method");
@@ -203,6 +209,10 @@ void scene_on_enter_display(void* context) {
     case DISPLAY_POST_STREAM:
         method = METHOD_POST_STREAM;
         success = sendHttpRequest(app, method, app->post_state->url, app->post_state->payload);
+        break;
+    case DISPLAY_BUILD_HTTP:
+        method = METHOD_CUSTOM;
+        success = sendHttpRequest(app, method, NULL, NULL);
         break;
     default:
         FURI_LOG_E(TAG, "Unknown display mode");

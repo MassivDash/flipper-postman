@@ -208,6 +208,122 @@ bool scene_on_event_build_http_call(void* context, SceneManagerEvent event) {
             break;
         case BuildHttpItemAction: // Send Request
             // Implement the logic to send the HTTP request
+            FURI_LOG_T(TAG, "Sending custom HTTP request");
+
+            // Reset the headers on the board to avoid any conflicts
+            bool reseted = false;
+            if(resetHttpConfigCommand(app->uart, "")) {
+                reseted = true;
+            }
+
+            if(!reseted) {
+                FURI_LOG_E(TAG, "Failed to reset the headers on the board");
+                break;
+            }
+
+            // Possible options for the request
+
+            bool url_present = app->build_http_state && strlen(app->build_http_state->url) > 0;
+
+            if(!url_present) {
+                FURI_LOG_E(TAG, "URL not set");
+                break;
+            }
+
+            // Payload and headers are optional
+            bool payload_present = app->build_http_state->payload &&
+                                   !furi_string_empty(app->build_http_state->payload);
+            bool headers_present = app->build_http_state->headers_count > 0;
+
+            // Possible outcomes out of uart commands
+            bool mode_set = false;
+            bool url_set = false;
+            bool headers_set = false;
+            bool payload_set = false;
+            bool http_method_set = false;
+
+            mode_set = buildHttpImplementationCommand(
+                app->uart, app->build_http_state->mode ? "STREAM" : "CALL");
+
+            if(!mode_set) {
+                FURI_LOG_E(TAG, "Failed to set the mode");
+                break;
+            }
+
+            url_set = buildHttpUrlCommand(app->uart, app->build_http_state->url);
+
+            if(!url_set) {
+                FURI_LOG_E(TAG, "Failed to set the URL");
+                break;
+            }
+            // Set the http headers if present
+            if(headers_present) {
+                for(size_t i = 0; i < app->build_http_state->headers_count; i++) {
+                    char header[2049];
+                    int required_size = snprintf(
+                        NULL,
+                        0,
+                        "%s:%s\n",
+                        app->build_http_state->headers[i].key,
+                        app->build_http_state->headers[i].value);
+
+                    if(required_size >= (int)sizeof(header)) {
+                        FURI_LOG_E(TAG, "Header size exceeds buffer limit");
+                        continue; // Skip this header or handle the error as needed
+                    }
+
+                    snprintf(
+                        header,
+                        sizeof(header),
+                        "%s:%s\n",
+                        app->build_http_state->headers[i].key,
+                        app->build_http_state->headers[i].value);
+                    buildHttpHeaderCommand(app->uart, header);
+                }
+                headers_set = true;
+            }
+
+            if(headers_present && !headers_set) {
+                FURI_LOG_E(TAG, "Failed to set the headers");
+                break;
+            }
+
+            if(payload_present) {
+                payload_set = buildHttpPayloadCommand(
+                    app->uart, furi_string_get_cstr(app->build_http_state->payload));
+            }
+
+            if(payload_present && !payload_set) {
+                FURI_LOG_E(TAG, "Failed to set the payload");
+                break;
+            }
+
+            if(app->build_http_state->show_response_headers) {
+                buildHttpShowResponseHeadersCommand(app->uart, "true");
+            }
+
+            const char* method_names[] = {"HEAD", "GET", "POST", "PATCH", "PUT", "DELETE"};
+            http_method_set = buildHttpMethodCommand(
+                app->uart, method_names[app->build_http_state->http_method]);
+
+            if(!http_method_set) {
+                FURI_LOG_E(TAG, "Failed to set the HTTP method");
+                break;
+            }
+
+            // // Now that we have set all the parameters, we can move the user to respective views
+
+            if(app->build_http_state->mode) {
+                // Set download mode for post
+                app->download_mode = DOWNLOAD_CUSTOM;
+                // If save to file mode, move to filename input
+                app->text_input_state = TextInputState_Filename;
+                scene_manager_next_scene(app->scene_manager, Text_Input);
+            } else {
+                app->display_mode = DISPLAY_BUILD_HTTP;
+                scene_manager_next_scene(app->scene_manager, Display);
+            }
+
             consumed = true;
             break;
 

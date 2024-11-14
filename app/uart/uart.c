@@ -587,62 +587,68 @@ bool postCommand(Uart* uart, const char* url_argument, FuriString* payload) {
     return true;
 }
 
+static bool send_http_command(Uart* uart, const char* command_format, const char* argument) {
+    char command[256];
+    snprintf(command, sizeof(command), command_format, argument);
+
+    if(!uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command))) {
+        return false;
+    }
+
+    // Wait for the response
+    uint32_t events = furi_thread_flags_wait(WorkerEvtRxDone, FuriFlagWaitAny, 2000);
+    if(events & WorkerEvtRxDone) {
+        // check if the response exist otherwise input error message to text_box_store
+        // Log the response
+        FURI_LOG_T(TAG, "Response: %s", uart->last_response);
+        return true;
+    }
+
+    FURI_LOG_E(TAG, "UART_ERROR: No response received from the board.");
+    return false;
+}
+
 bool buildHttpMethodCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "HTTP_SET_METHOD: %s", argument);
+    FURI_LOG_T(TAG, "BUILD_HTTP_METHOD: %s", argument);
     // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    return send_http_command(uart, "BUILD_HTTP_METHOD %s\n", argument);
 }
 
 bool buildHttpUrlCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "HTTP_URL: %s", argument);
-    // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    FURI_LOG_T(TAG, "BUILD_HTTP_URL: %s \n", argument);
+    return send_http_command(uart, "BUILD_HTTP_URL %s\n", argument);
 }
 
 bool buildHttpHeaderCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "HTTP_ADD_HEADER: %s", argument);
-    // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    FURI_LOG_T(TAG, "BUILD_HTTP_HEADER: %s \n", argument);
+    return send_http_command(uart, "BUILD_HTTP_HEADER %s\n", argument);
 }
 
 bool buildHttpPayloadCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "HTTP_SET_PAYLOAD: %s", argument);
-    // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
-}
-
-bool removeHttpHeaderCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "HTTP_REMOVE_HEADER: %s", argument);
-    // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    FURI_LOG_T(TAG, "BUILD_HTTP_PAYLOAD: %s \n", argument);
+    return send_http_command(uart, "BUILD_HTTP_PAYLOAD %s\n", argument);
 }
 
 bool resetHttpConfigCommand(Uart* uart, const char* argument) {
     UNUSED(argument);
-    FURI_LOG_T(TAG, "HTTP_CONFIG_REST: All configurations reset");
-    // Send the command to the UART
-    const char* command = "RESET_HTTP_CONFIG\n";
-    return uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command));
+    FURI_LOG_T(TAG, "RESET_HTTP_CONFIG: All configurations reset");
+    return send_http_command(uart, "RESET_HTTP_CONFIG\n", "");
 }
 
 bool buildHttpShowResponseHeadersCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "HTTP_BUILDER_SHOW_RESPONSE_HEADERS: %s", argument);
-    // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    FURI_LOG_T(TAG, "BUILD_HTTP_SHOW_RESPONSE_HEADERS: %s \n", argument);
+    return send_http_command(uart, "BUILD_HTTP_SHOW_RESPONSE_HEADERS %s\n", argument);
 }
 
 bool buildHttpImplementationCommand(Uart* uart, const char* argument) {
-    FURI_LOG_T(TAG, "HTTP_SET_IMPLEMENTATION: %s", argument);
-    // Send the command to the UART
-    return uart_terminal_uart_tx(uart, (uint8_t*)argument, strlen(argument));
+    FURI_LOG_T(TAG, "BUILD_HTTP_IMPLEMENTATION: %s \n", argument);
+    return send_http_command(uart, "BUILD_HTTP_IMPLEMENTATION %s\n", argument);
 }
 
 bool executeHttpCallCommand(Uart* uart, const char* argument) {
     UNUSED(argument);
     FURI_LOG_T("UART_CMDS", "EXECUTE_HTTP_CALL");
-    // Send the command to the UART
-    const char* command = "EXECUTE_HTTP_CALL\n";
-    return uart_terminal_uart_tx(uart, (uint8_t*)command, strlen(command));
+    return send_http_command(uart, "EXECUTE_HTTP_CALL\n", "");
 }
 
 bool connectCommand(Uart* uart, const char* argument) {
